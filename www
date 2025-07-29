@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIS圖台系統</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .gis-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #2c3e50;
+            color: white;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #34495e;
+            border-bottom: 1px solid #445566;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+
+        .layer-section {
+            padding: 15px;
+            border-bottom: 1px solid #445566;
+        }
+
+        .layer-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #3498db;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .layer-title::before {
+            content: '▼';
+            margin-right: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .layer-title.collapsed::before {
+            transform: rotate(-90deg);
+        }
+
+        .layer-items {
+            margin-left: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .layer-items.collapsed {
+            display: none;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .layer-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 4px;
+        }
+
+        .layer-checkbox {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .layer-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        .layer-label {
+            font-size: 13px;
+            flex: 1;
+        }
+
+        .scale-info {
+            font-size: 10px;
+            color: #95a5a6;
+            margin-left: auto;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+        }
+
+        .control-panel {
+            background: rgba(255,255,255,0.95);
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            min-width: 200px;
+        }
+
+        .control-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .zoom-display {
+            font-size: 14px;
+            color: #34495e;
+            text-align: center;
+            padding: 5px;
+            background: #ecf0f1;
+            border-radius: 4px;
+        }
+
+        .layer-visibility-info {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+
+        .custom-marker {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .marker-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .seven-eleven-marker {
+            background: rgba(0, 166, 81, 0.9);
+            color: #00a651;
+            text-shadow: 1px 1px 0 white;
+        }
+
+        .family-mart-marker {
+            background: rgba(0, 102, 204, 0.9);
+            color: #0066cc;
+            text-shadow: 1px 1px 0 white;
+        }
+
+        .hi-life-marker {
+            background: rgba(230, 0, 18, 0.9);
+            color: #e60012;
+            text-shadow: 1px 1px 0 white;
+        }
+
+        .ok-mart-marker {
+            background: rgba(51, 51, 51, 0.9);
+            color: #333333;
+            text-shadow: 1px 1px 0 white;
+        }
+
+        .search-box {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        .search-input {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            width: 250px;
+            font-size: 14px;
+        }
+
+        .status-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(44, 62, 80, 0.9);
+            color: white;
+            padding: 8px 15px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 1000;
+        }
+
+        .coordinates {
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 2000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="gis-container">
+        <!-- 左側圖層控制面板 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">GIS圖台系統</div>
+                <div class="sidebar-subtitle">圖層管理與控制</div>
+            </div>
+
+            <!-- 基礎圖層 -->
+            <div class="layer-section">
+                <div class="layer-title" onclick="toggleSection(this)">其他基礎圖</div>
+                <div class="layer-items">
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="county-boundary" checked>
+                        <div class="layer-icon" style="background: #000000;"></div>
+                        <label class="layer-label" for="county-boundary">縣市界</label>
+                        <span class="scale-info">6-20</span>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="village-boundary" checked>
+                        <div class="layer-icon" style="background: #929299; height: 2px; margin-top: 7px;"></div>
+                        <label class="layer-label" for="village-boundary">里界</label>
+                        <span class="scale-info">13-20</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 商業設施 -->
+            <div class="layer-section">
+                <div class="layer-title" onclick="toggleSection(this)">商業設施</div>
+                <div class="layer-items">
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="seven-eleven" checked>
+                        <div class="layer-icon" style="background: #00a651;"></div>
+                        <label class="layer-label" for="seven-eleven">7-ELEVEN</label>
+                        <span class="scale-info">14-20</span>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="family-mart" checked>
+                        <div class="layer-icon" style="background: #0066cc;"></div>
+                        <label class="layer-label" for="family-mart">全家便利商店</label>
+                        <span class="scale-info">14-20</span>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="hi-life" checked>
+                        <div class="layer-icon" style="background: #e60012;"></div>
+                        <label class="layer-label" for="hi-life">萊爾富</label>
+                        <span class="scale-info">14-20</span>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="ok-mart" checked>
+                        <div class="layer-icon" style="background: #333333;"></div>
+                        <label class="layer-label" for="ok-mart">OK便利商店</label>
+                        <span class="scale-info">14-20</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 電子地圖 -->
+            <div class="layer-section">
+                <div class="layer-title" onclick="toggleSection(this)">電子地圖</div>
+                <div class="layer-items">
+                    <div class="layer-item">
+                        <input type="radio" name="basemap" class="layer-checkbox" id="osm-map" checked>
+                        <div class="layer-icon" style="background: linear-gradient(45deg, #4CAF50, #2196F3);"></div>
+                        <label class="layer-label" for="osm-map">OpenStreetMap</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="radio" name="basemap" class="layer-checkbox" id="satellite-map">
+                        <div class="layer-icon" style="background: linear-gradient(45deg, #8BC34A, #FFC107);"></div>
+                        <label class="layer-label" for="satellite-map">衛星影像</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主地圖區域 -->
+        <div class="map-container">     
+            <div id="map"></div>
+            
+            <!-- 地圖控制面板 -->
+            <div class="map-controls">
+                <div class="control-panel">
+                    <div class="control-title">縮放等級</div>
+                    <div class="zoom-display" id="zoom-display">15</div>
+                    <div class="layer-visibility-info" id="visibility-info">
+                        顯示: 商業設施 + 標籤<br>
+                        比例尺: 1:15,000
+                    </div>
+                </div>
+            </div>
+
+            <!-- 搜尋框 -->
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="搜尋地址、店家名稱..." id="search-input">
+            </div>
+
+            <!-- 載入指示器 -->
+            <div class="loading" id="loading">
+                載入圖層資料中...
+            </div>
+
+            <!-- 狀態列 -->
+            <div class="status-bar">
+                <div class="coordinates" id="coordinates">經度: 121.3015, 緯度: 24.9668</div>
+                <div id="layer-count">已載入圖層: 6</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        // 初始化地圖 (桃園市中心)
+        const map = L.map('map', {
+            center: [24.9668, 121.3015],
+            zoom: 15,
+            zoomControl: false
+        });
+
+        // 添加縮放控制到右下角
+        L.control.zoom({
+            position: 'bottomright'
+        }).addTo(map);
+
+        // 基礎圖層
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© Esri'
+        });
+
+        // 圖層群組
+        const countyBoundaryLayer = L.layerGroup().addTo(map);
+        const villageBoundaryLayer = L.layerGroup().addTo(map);
+        const sevenElevenLayer = L.layerGroup().addTo(map);
+        const familyMartLayer = L.layerGroup().addTo(map);
+        const hiLifeLayer = L.layerGroup().addTo(map);
+        const okMartLayer = L.layerGroup().addTo(map);
+
+        // 模擬行政區邊界
+        function addCountyBoundaries() {
+            const taoyuanBounds = [
+                [24.8, 121.1],
+                [25.1, 121.1], 
+                [25.1, 121.5],
+                [24.8, 121.5]
+            ];
+            
+            L.polygon(taoyuanBounds, {
+                color: '#000000',
+                weight: 12,
+                fillOpacity: 0.1,
+                fillColor: '#ffffff'
+            }).bindPopup('桃園市').addTo(countyBoundaryLayer);
+        }
+
+        // 模擬里界
+        function addVillageBoundaries() {
+            const villages = [
+                { bounds: [[24.95, 121.28], [24.97, 121.28], [24.97, 121.32], [24.95, 121.32]], name: '中正里' },
+                { bounds: [[24.97, 121.28], [24.99, 121.28], [24.99, 121.32], [24.97, 121.32]], name: '文化里' },
+                { bounds: [[24.95, 121.32], [24.97, 121.32], [24.97, 121.36], [24.95, 121.36]], name: '永安里' }
+            ];
+
+            villages.forEach(village => {
+                L.polygon(village.bounds, {
+                    color: '#929299',
+                    weight: 1.2,
+                    fillOpacity: 0.05,
+                    fillColor: '#ffffff'
+                }).bindPopup(village.name).addTo(villageBoundaryLayer);
+            });
+        }
+
+        // 便利商店資料
+        const storeData = {
+            sevenEleven: [
+                { pos: [24.9668, 121.3015], name: '7-ELEVEN 桃園站前店' },
+                { pos: [24.9758, 121.2945], name: '7-ELEVEN 中正店' },
+                { pos: [24.9588, 121.3125], name: '7-ELEVEN 文化店' },
+                { pos: [24.9518, 121.3285], name: '7-ELEVEN 永安店' }
+            ],
+            familyMart: [
+                { pos: [24.9708, 121.3055], name: '全家桃園中山店' },
+                { pos: [24.9628, 121.2975], name: '全家桃園站前店' },
+                { pos: [24.9548, 121.3165], name: '全家桃園文化店' }
+            ],
+            hiLife: [
+                { pos: [24.9648, 121.3095], name: '萊爾富桃園中正店' },
+                { pos: [24.9778, 121.2895], name: '萊爾富桃園北門店' },
+                { pos: [24.9568, 121.3205], name: '萊爾富桃園文昌店' }
+            ],
+            okMart: [
+                { pos: [24.9688, 121.2935], name: 'OK便利商店桃園店' },
+                { pos: [24.9598, 121.3145], name: 'OK便利商店文化店' }
+            ]
+        };
+
+        // 創建自定義標記
+        function createCustomMarker(store, type) {
+            const configs = {
+                sevenEleven: { color: '#00a651', bgColor: 'rgba(0, 166, 81, 0.9)', icon: '7' },
+                familyMart: { color: '#0066cc', bgColor: 'rgba(0, 102, 204, 0.9)', icon: '全' },
+                hiLife: { color: '#e60012', bgColor: 'rgba(230, 0, 18, 0.9)', icon: '萊' },
+                okMart: { color: '#333333', bgColor: 'rgba(51, 51, 51, 0.9)', icon: 'OK' }
+            };
+
+            const config = configs[type];
+            const showLabel = map.getZoom() >= 15;
+            
+            const iconHtml = `
+                <div class="custom-marker ${type.replace(/([A-Z])/g, '-$1').toLowerCase()}-marker">
+                    <div class="marker-icon" style="background: ${config.bgColor};">${config.icon}</div>
+                    ${showLabel ? `<span>${store.name}</span>` : ''}
+                </div>
+            `;
+
+            return L.divIcon({
+                html: iconHtml,
+                className: 'custom-div-icon',
+                iconSize: showLabel ? [null, 24] : [20, 20],
+                iconAnchor: showLabel ? [10, 24] : [10, 10]
+            });
+        }
+
+        // 添加便利商店標記
+        function addStoreMarkers() {
+            // 清除現有標記
+            sevenElevenLayer.clearLayers();
+            familyMartLayer.clearLayers();
+            hiLifeLayer.clearLayers();
+            okMartLayer.clearLayers();
+
+            const currentZoom = map.getZoom();
+            
+            if (currentZoom >= 14) {
+                // 7-ELEVEN
+                storeData.sevenEleven.forEach(store => {
+                    const marker = L.marker(store.pos, {
+                        icon: createCustomMarker(store, 'sevenEleven')
+                    }).bindPopup(`
+                        <b>${store.name}</b><br>
+                        營業時間: 24小時<br>
+                        服務: ATM、影印、代收
+                    `);
+                    sevenElevenLayer.addLayer(marker);
+                });
+
+                // 全家便利商店
+                storeData.familyMart.forEach(store => {
+                    const marker = L.marker(store.pos, {
+                        icon: createCustomMarker(store, 'familyMart')
+                    }).bindPopup(`
+                        <b>${store.name}</b><br>
+                        營業時間: 24小時<br>
+                        服務: ATM、咖啡、宅配
+                    `);
+                    familyMartLayer.addLayer(marker);
+                });
+
+                // 萊爾富
+                storeData.hiLife.forEach(store => {
+                    const marker = L.marker(store.pos, {
+                        icon: createCustomMarker(store, 'hiLife')
+                    }).bindPopup(`
+                        <b>${store.name}</b><br>
+                        營業時間: 06:00-24:00<br>
+                        服務: ATM、咖啡、代收
+                    `);
+                    hiLifeLayer.addLayer(marker);
+                });
+
+                // OK便利商店
+                storeData.okMart.forEach(store => {
+                    const marker = L.marker(store.pos, {
+                        icon: createCustomMarker(store, 'okMart')
+                    }).bindPopup(`
+                        <b>${store.name}</b><br>
+                        營業時間: 06:00-24:00<br>
+                        服務: ATM、影印、代收
+                    `);
+                    okMartLayer.addLayer(marker);
+                });
+            }
+        }
+
+        // 更新縮放顯示
+        function updateZoomDisplay() {
+            const zoom = map.getZoom();
+            document.getElementById('zoom-display').textContent = zoom;
+            
+            let visibilityInfo = '';
+            const scale = Math.pow(2, 20 - zoom) * 1000;
+            
+            if (zoom >= 15) {
+                visibilityInfo = '顯示: 商業設施 + 標籤<br>';
+            } else if (zoom >= 14) {
+                visibilityInfo = '顯示: 商業設施圖示<br>';
+            } else if (zoom >= 13) {
+                visibilityInfo = '顯示: 行政區劃 + 里界<br>';
+            } else if (zoom >= 6) {
+                visibilityInfo = '顯示: 縣市界<br>';
+            } else {
+                visibilityInfo = '顯示: 基礎地圖<br>';
+            }
+            
+            visibilityInfo += `比例尺: 1:${scale.toLocaleString()}`;
+            document.getElementById('visibility-info').innerHTML = visibilityInfo;
+        }
+
+        // 更新滑鼠座標
+        function updateCoordinates(e) {
+            const coords = `經度: ${e.latlng.lng.toFixed(4)}, 緯度: ${e.latlng.lat.toFixed(4)}`;
+            document.getElementById('coordinates').textContent = coords;
+        }
+
+        // 圖層控制
+        function toggleSection(element) {
+            element.classList.toggle('collapsed');
+            const items = element.nextElementSibling;
+            items.classList.toggle('collapsed');
+        }
+
+        // 圖層顯示控制
+        function setupLayerControls() {
+            // 縣市界
+            document.getElementById('county-boundary').addEventListener('change', function() {
+                if (this.checked) {
+                    map.addLayer(countyBoundaryLayer);
+                } else {
+                    map.removeLayer(countyBoundaryLayer);
+                }
+            });
+
+            // 里界
+            document.getElementById('village-boundary').addEventListener('change', function() {
+                if (this.checked) {
+                    map.addLayer(villageBoundaryLayer);
+                } else {
+                    map.removeLayer(villageBoundaryLayer);
+                }
+            });
+
+            // 便利商店圖層控制
+            const storeLayers = {
+                'seven-eleven': sevenElevenLayer,
+                'family-mart': familyMartLayer,
+                'hi-life': hiLifeLayer,
+                'ok-mart': okMartLayer
+            };
+
+            Object.keys(storeLayers).forEach(id => {
+                document.getElementById(id).addEventListener('change', function() {
+                    if (this.checked) {
+                        map.addLayer(storeLayers[id]);
+                    } else {
+                        map.removeLayer(storeLayers[id]);
+                    }
+                });
+            });
+
+            // 底圖切換
+            document.getElementById('osm-map').addEventListener('change', function() {
+                if (this.checked) {
+                    map.removeLayer(satelliteLayer);
+                    map.addLayer(osmLayer);
+                }
+            });
+
+            document.getElementById('satellite-map').addEventListener('change', function() {
+                if (this.checked) {
+                    map.removeLayer(osmLayer);
+                    map.addLayer(satelliteLayer);
+                }
+            });
+        }
+
+        // 搜尋功能
+        function setupSearch() {
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = this.value.toLowerCase();
+                    // 簡單的店家搜尋
+                    let found = false;
+                    
+                    Object.values(storeData).flat().forEach(store => {
+                        if (store.name.toLowerCase().includes(query)) {
+                            map.setView(store.pos, 18);
+                            found = true;
+                        }
+                    });
+                    
+                    if (!found) {
+                        alert('找不到相關店家，請嘗試其他關鍵字');
+                    }
+                }
+            });
+        }
+
+        // 初始化
+        function init() {
+            // 載入初始圖層
+            document.getElementById('loading').style.display = 'block';
+            
+            setTimeout(() => {
+                addCountyBoundaries();
+                addVillageBoundaries();
+                addStoreMarkers();
+                
+                document.getElementById('loading').style.display = 'none';
+                updateZoomDisplay();
+            }, 1000);
+
+            // 設置事件監聽
+            map.on('zoomend', () => {
+                updateZoomDisplay();
+                addStoreMarkers(); // 重新繪製標記以更新標籤顯示
+            });
+            
+            map.on('mousemove', updateCoordinates);
+            
+            setupLayerControls();
+            setupSearch();
+        }
+
+        // 啟動應用
+        init();
+    </script>
+</body>
+</html>
