@@ -327,6 +327,136 @@
         .search-container {
             position: relative;
         }
+
+        .ranking-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .ranking-item {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .ranking-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .ranking-item:last-child {
+            border-bottom: none;
+        }
+
+        .ranking-number {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.8rem;
+        }
+
+        .ranking-score {
+            float: right;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .score-badge {
+            display: inline-block;
+            background: rgba(33, 150, 243, 0.1);
+            color: #1976d2;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+
+        .park-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .park-item {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .park-item:hover {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            transform: translateX(2px);
+        }
+
+        .park-item:last-child {
+            border-bottom: none;
+        }
+
+        .park-name {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .park-score {
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .park-info {
+            font-size: 0.8rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .park-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 6px;
+            font-size: 0.75rem;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 3px 6px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .stat-value {
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -394,6 +524,11 @@
                         <label><input type="checkbox" id="onlySelectedIncome"> 僅顯示選定收入區域</label>
                         <label><input type="checkbox" id="showIncomeCluster" checked> 顯示收入區域叢集</label>
                     </div>
+                    <div class="filter-group">
+                        <label>收入區域圓圈半徑 (公尺) - 影響範圍</label>
+                        <input type="range" class="range-slider" id="incomeCircleRadius" min="300" max="1500" value="700" step="50">
+                        <div class="range-value" id="incomeCircleRadiusValue">700公尺</div>
+                    </div>
                 </div>
 
                 <div class="filter-section">
@@ -402,6 +537,80 @@
                         <label><input type="checkbox" id="convenience" checked> 🏪 便利商店</label>
                         <label><input type="checkbox" id="pharmacy"> 💊 藥局</label>
                         <label><input type="checkbox" id="restaurant"> 🍔 餐廳</label>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3><i class="fas fa-circle-dot"></i> 以公園為中心的功能圓圈</h3>
+                    <div class="filter-group">
+                        <label><input type="checkbox" id="showWalkingRange" checked> 🚶 步行舒適範圍</label>
+                        <label><input type="checkbox" id="showTransportRange" checked> 🚌 交通可及範圍</label>
+                        <label><input type="checkbox" id="showLifeRange"> 🏪 生活機能範圍</label>
+                        <label><input type="checkbox" id="showSafetyRange"> 🛡️ 安全影響範圍</label>
+                        <label><input type="checkbox" id="showParkLabels" checked> 🏷️ 顯示公園名稱</label>
+                    </div>
+                    <div class="filter-group">
+                        <label>步行舒適範圍 (公尺) - 適合日常活動</label>
+                        <input type="range" class="range-slider" id="walkingRadius" min="100" max="500" value="200" step="25">
+                        <div class="range-value" id="walkingRadiusValue">200公尺</div>
+                    </div>
+                    <div class="filter-group">
+                        <label>交通可及範圍 (公尺) - 能到達交通站點</label>
+                        <input type="range" class="range-slider" id="transportRadius" min="300" max="1200" value="600" step="50">
+                        <div class="range-value" id="transportRadiusValue">600公尺</div>
+                    </div>
+                    <div class="filter-group">
+                        <label>生活機能範圍 (公尺) - 便利商店、餐廳等</label>
+                        <input type="range" class="range-slider" id="lifeRadius" min="400" max="1000" value="800" step="50">
+                        <div class="range-value" id="lifeRadiusValue">800公尺</div>
+                    </div>
+                    <div class="filter-group">
+                        <label>安全影響範圍 (公尺) - 周邊環境安全度</label>
+                        <input type="range" class="range-slider" id="safetyRadius" min="200" max="800" value="400" step="50">
+                        <div class="range-value" id="safetyRadiusValue">400公尺</div>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3><i class="fas fa-star"></i> 綜合評分設定</h3>
+                    <div class="filter-group">
+                        <label><input type="checkbox" id="enableScoring" checked> 📊 啟用綜合評分</label>
+                        <label><input type="checkbox" id="showScoreRanking"> 🏆 顯示評分排名</label>
+                    </div>
+                    <div class="filter-group">
+                        <label>交通便利性權重 (%)</label>
+                        <input type="range" class="range-slider" id="transportWeight" min="0" max="100" value="35" step="5">
+                        <div class="range-value" id="transportWeightValue">35%</div>
+                    </div>
+                    <div class="filter-group">
+                        <label>設施完善度權重 (%)</label>
+                        <input type="range" class="range-slider" id="facilityWeight" min="0" max="100" value="25" step="5">
+                        <div class="range-value" id="facilityWeightValue">25%</div>
+                    </div>
+                    <div class="filter-group">
+                        <label>夜宿適宜度權重 (%)</label>
+                        <input type="range" class="range-slider" id="suitabilityWeight" min="0" max="100" value="30" step="5">
+                        <div class="range-value" id="suitabilityWeightValue">30%</div>
+                    </div>
+                    <div class="filter-group">
+                        <label>安全評分權重 (%)</label>
+                        <input type="range" class="range-slider" id="safetyWeight" min="0" max="100" value="10" step="5">
+                        <div class="range-value" id="safetyWeightValue">10%</div>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3><i class="fas fa-list"></i> 公園詳細列表</h3>
+                    <div class="filter-group">
+                        <label><input type="checkbox" id="showParkList" checked> 📋 顯示公園列表</label>
+                        <label><input type="checkbox" id="showOnlyVisible"> 👁️ 僅顯示可見公園</label>
+                    </div>
+                </div>
+
+                <div class="filter-section" id="parkListSection">
+                    <h3><i class="fas fa-map-marker-alt"></i> 公園資訊</h3>
+                    <div id="parkDetailList" class="park-list">
+                        <!-- 公園詳細列表將在這裡顯示 -->
                     </div>
                 </div>
 
@@ -470,16 +679,23 @@
         // 初始化地圖 (以台中市中心為中心)
         let map = L.map('map').setView([24.1477, 120.6736], 12);
 
-        // 添加底圖
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+        // 添加底圖 - 使用更簡潔的CartoDB地圖
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
         }).addTo(map);
 
         // 圖層群組
         let parkLayers = L.layerGroup().addTo(map);
+        let walkingRangeLayers = L.layerGroup().addTo(map);
+        let transportRangeLayers = L.layerGroup().addTo(map);
+        let lifeRangeLayers = L.layerGroup().addTo(map);
+        let safetyRangeLayers = L.layerGroup().addTo(map);
+        let parkLabelLayers = L.layerGroup().addTo(map);
         let transportLayers = L.layerGroup().addTo(map);
         let facilityLayers = L.layerGroup().addTo(map);
-        let incomeLayers = L.layerGroup().addTo(map);
+        let incomeCircleLayers = L.layerGroup().addTo(map);
         let incomeClusterGroup = L.markerClusterGroup({
             iconCreateFunction: function(cluster) {
                 const markers = cluster.getAllChildMarkers();
@@ -730,6 +946,34 @@
             });
         };
 
+        // 創建文字標籤
+        const createTextLabel = (text, options = {}) => {
+            const defaultOptions = {
+                color: '#2d3748',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                textAlign: 'center',
+                minWidth: '60px',
+                ...options
+            };
+
+            const styles = Object.entries(defaultOptions)
+                .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
+                .join('; ');
+
+            return L.divIcon({
+                html: `<div style="${styles}">${text}</div>`,
+                className: 'park-label',
+                iconSize: [null, null],
+                iconAnchor: [null, null]
+            });
+        };
+
         // 搜尋功能實現
         let searchResults = [];
         let currentSelectedIndex = -1;
@@ -829,6 +1073,11 @@
         // 渲染公園
         function renderParks() {
             parkLayers.clearLayers();
+            walkingRangeLayers.clearLayers();
+            transportRangeLayers.clearLayers();
+            lifeRangeLayers.clearLayers();
+            safetyRangeLayers.clearLayers();
+            parkLabelLayers.clearLayers();
             
             parkData.forEach(park => {
                 let color = '#F44336'; // 低適宜度 - 紅色
@@ -864,6 +1113,11 @@
                 const marker = L.marker([park.lat, park.lng], {
                     icon: createIcon(color, 'fa-tree')
                 });
+                
+                // 計算綜合評分
+                const compositeScore = calculateCompositeScore(park);
+                const transportScore = calculateTransportScore(park);
+                const facilityScore = calculateFacilityScore(park);
                 
                 // 創建彈出視窗內容
                 const facilitiesHtml = park.facilities.map(f => {
@@ -902,10 +1156,16 @@
                 
                 const popupContent = `
                     <div class="popup-content">
-                        <h4>${park.name}</h4>
+                        <h4>${park.name} ${document.getElementById('enableScoring').checked ? `<span class="score-badge">${compositeScore}</span>` : ''}</h4>
                         <div class="rating">
                             適宜度: ${'⭐'.repeat(Math.floor(park.suitability / 2))} (${park.suitability}/10)
                         </div>
+                        ${document.getElementById('enableScoring').checked ? `
+                        <p><strong>綜合評分:</strong> ${compositeScore}/10</p>
+                        <p><strong>各項評分:</strong></p>
+                        <p>　　交通: ${transportScore}/10 | 設施: ${facilityScore}/10</p>
+                        <p>　　適宜: ${park.suitability}/10 | 安全: ${park.safety_score}/10</p>
+                        ` : ''}
                         <p><strong>描述:</strong> ${park.description}</p>
                         <p><strong>設施:</strong><br>${facilitiesHtml}</p>
                         <p><strong>周邊收入:</strong> ${park.income_level}</p>
@@ -916,12 +1176,190 @@
                 
                 marker.bindPopup(popupContent);
                 parkLayers.addLayer(marker);
+                
+                // 以公園為中心的功能圓圈
+                // 1. 步行舒適範圍 (最內圈)
+                if (document.getElementById('showWalkingRange').checked) {
+                    const walkingRadius = document.getElementById('walkingRadius').value;
+                    const walkingCircle = L.circle([park.lat, park.lng], {
+                        color: '#4CAF50',
+                        fillColor: '#4CAF50',
+                        fillOpacity: 0.15,
+                        weight: 2,
+                        radius: walkingRadius,
+                        dashArray: '5, 5'
+                    });
+                    
+                    walkingCircle.bindPopup(`
+                        <div class="popup-content">
+                            <h4>${park.name} - 步行舒適範圍</h4>
+                            <p><strong>範圍:</strong> ${walkingRadius}公尺</p>
+                            <p><strong>說明:</strong> 適合日常活動的步行距離</p>
+                            <p><strong>涵蓋面積:</strong> 約${Math.round(Math.PI * Math.pow(walkingRadius/1000, 2) * 100) / 100}平方公里</p>
+                        </div>
+                    `);
+                    
+                    walkingRangeLayers.addLayer(walkingCircle);
+                }
+                
+                // 2. 交通可及範圍
+                if (document.getElementById('showTransportRange').checked) {
+                    const transportRadius = document.getElementById('transportRadius').value;
+                    const transportCircle = L.circle([park.lat, park.lng], {
+                        color: '#2196F3',
+                        fillColor: '#2196F3',
+                        fillOpacity: 0.08,
+                        weight: 2,
+                        radius: transportRadius,
+                        dashArray: '10, 5'
+                    });
+                    
+                    transportCircle.bindPopup(`
+                        <div class="popup-content">
+                            <h4>${park.name} - 交通可及範圍</h4>
+                            <p><strong>範圍:</strong> ${transportRadius}公尺</p>
+                            <p><strong>說明:</strong> 能到達捷運站、公車站的範圍</p>
+                            <p><strong>涵蓋面積:</strong> 約${Math.round(Math.PI * Math.pow(transportRadius/1000, 2) * 100) / 100}平方公里</p>
+                        </div>
+                    `);
+                    
+                    transportRangeLayers.addLayer(transportCircle);
+                }
+                
+                // 3. 生活機能範圍
+                if (document.getElementById('showLifeRange').checked) {
+                    const lifeRadius = document.getElementById('lifeRadius').value;
+                    const lifeCircle = L.circle([park.lat, park.lng], {
+                        color: '#FF9800',
+                        fillColor: '#FF9800',
+                        fillOpacity: 0.05,
+                        weight: 2,
+                        radius: lifeRadius,
+                        dashArray: '15, 10'
+                    });
+                    
+                    lifeCircle.bindPopup(`
+                        <div class="popup-content">
+                            <h4>${park.name} - 生活機能範圍</h4>
+                            <p><strong>範圍:</strong> ${lifeRadius}公尺</p>
+                            <p><strong>說明:</strong> 便利商店、餐廳等生活設施的可及範圍</p>
+                            <p><strong>涵蓋面積:</strong> 約${Math.round(Math.PI * Math.pow(lifeRadius/1000, 2) * 100) / 100}平方公里</p>
+                        </div>
+                    `);
+                    
+                    lifeRangeLayers.addLayer(lifeCircle);
+                }
+                
+                // 4. 安全影響範圍
+                if (document.getElementById('showSafetyRange').checked) {
+                    const safetyRadius = document.getElementById('safetyRadius').value;
+                    const safetyCircle = L.circle([park.lat, park.lng], {
+                        color: '#9C27B0',
+                        fillColor: '#9C27B0',
+                        fillOpacity: 0.1,
+                        weight: 2,
+                        radius: safetyRadius,
+                        dashArray: '20, 10'
+                    });
+                    
+                    safetyCircle.bindPopup(`
+                        <div class="popup-content">
+                            <h4>${park.name} - 安全影響範圍</h4>
+                            <p><strong>範圍:</strong> ${safetyRadius}公尺</p>
+                            <p><strong>說明:</strong> 公園安全性影響的周邊區域</p>
+                            <p><strong>安全評分:</strong> ${park.safety_score}/10</p>
+                            <p><strong>涵蓋面積:</strong> 約${Math.round(Math.PI * Math.pow(safetyRadius/1000, 2) * 100) / 100}平方公里</p>
+                        </div>
+                    `);
+                    
+                    safetyRangeLayers.addLayer(safetyCircle);
+                }
+                
+                // 為公園添加名稱標籤（如果啟用了標籤顯示）
+                if (document.getElementById('showParkLabels').checked) {
+                    let maxRadius = 0;
+                    let labelColor = color;
+                    
+                    if (document.getElementById('showWalkingRange').checked) {
+                        const radius = document.getElementById('walkingRadius').value;
+                        if (radius > maxRadius) maxRadius = radius;
+                    }
+                    if (document.getElementById('showTransportRange').checked) {
+                        const radius = document.getElementById('transportRadius').value;
+                        if (radius > maxRadius) maxRadius = radius;
+                    }
+                    if (document.getElementById('showLifeRange').checked) {
+                        const radius = document.getElementById('lifeRadius').value;
+                        if (radius > maxRadius) maxRadius = radius;
+                    }
+                    if (document.getElementById('showSafetyRange').checked) {
+                        const radius = document.getElementById('safetyRadius').value;
+                        if (radius > maxRadius) maxRadius = radius;
+                    }
+                    
+                    // 如果有顯示任何圓圈，就在圓圈中心顯示公園名稱
+                    if (maxRadius > 0) {
+                    // 計算標籤顯示位置（圓圈中心點）
+                    const labelOptions = {
+                        color: labelColor,
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '3px 6px',
+                        borderRadius: '3px',
+                        border: `2px solid ${labelColor}`,
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                        textAlign: 'center',
+                        minWidth: 'auto',
+                        whiteSpace: 'nowrap'
+                    };
+                    
+                    const labelMarker = L.marker([park.lat, park.lng], {
+                        icon: createTextLabel(park.name, labelOptions),
+                        zIndexOffset: 1000 // 確保標籤顯示在最上層
+                    });
+                    
+                    // 點擊標籤也能打開彈窗
+                    labelMarker.on('click', () => {
+                        marker.openPopup();
+                    });
+                    
+                        parkLabelLayers.addLayer(labelMarker);
+                    } else {
+                        // 如果沒有顯示圓圈，就在公園圖標旁顯示名稱
+                        const labelOptions = {
+                            color: '#2d3748',
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            padding: '2px 4px',
+                            borderRadius: '2px',
+                            border: '1px solid #e2e8f0',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            textAlign: 'center',
+                            minWidth: 'auto',
+                            whiteSpace: 'nowrap'
+                        };
+                        
+                        // 在公園圖標右側顯示名稱
+                        const labelMarker = L.marker([park.lat, park.lng + 0.001], {
+                            icon: createTextLabel(park.name, labelOptions),
+                            zIndexOffset: 1000
+                        });
+                        
+                        labelMarker.on('click', () => {
+                            marker.openPopup();
+                        });
+                        
+                        parkLabelLayers.addLayer(labelMarker);
+                    }
+                }
             });
         }
 
         // 渲染收入區域
         function renderIncomeAreas() {
-            incomeLayers.clearLayers();
+            incomeCircleLayers.clearLayers();
             incomeClusterGroup.clearLayers();
             
             if (!document.getElementById('showIncomeLayer').checked) return;
@@ -929,6 +1367,7 @@
             const maxIncome = document.getElementById('incomeRange').value;
             const onlySelected = document.getElementById('onlySelectedIncome').checked;
             const showCluster = document.getElementById('showIncomeCluster').checked;
+            const circleRadius = document.getElementById('incomeCircleRadius').value;
             
             incomeAreas.forEach(area => {
                 if (onlySelected && area.income > maxIncome) return;
@@ -948,32 +1387,38 @@
                 
                 // 如果超過設定收入，降低透明度
                 if (area.income > maxIncome) {
-                    opacity = 0.1;
+                    opacity = 0.15;
                 }
                 
-                const polygon = L.polygon(area.bounds, {
+                // 計算收入區域中心點
+                const centerLat = (area.bounds[0][0] + area.bounds[1][0]) / 2;
+                const centerLng = (area.bounds[0][1] + area.bounds[1][1]) / 2;
+                
+                // 創建圓圈代替多邊形
+                const circle = L.circle([centerLat, centerLng], {
                     color: color,
-                    weight: 2,
-                    opacity: 0.8,
                     fillColor: color,
-                    fillOpacity: opacity
+                    fillOpacity: opacity,
+                    weight: 2,
+                    radius: circleRadius,
+                    dashArray: '8, 12'
                 });
                 
-                polygon.bindPopup(`
+                circle.bindPopup(`
                     <div class="popup-content">
-                        <h4>${area.name}</h4>
+                        <h4>${area.name} - 收入影響圈</h4>
                         <p><strong>平均月收入:</strong> ${area.income}萬元</p>
                         <p><strong>收入等級:</strong> ${area.level}</p>
+                        <p><strong>影響範圍:</strong> ${circleRadius}公尺</p>
+                        <p><strong>涵蓋面積:</strong> 約${Math.round(Math.PI * Math.pow(circleRadius/1000, 2) * 100) / 100}平方公里</p>
+                        <p><strong>說明:</strong> 此收入水平對周邊環境的影響範圍</p>
                     </div>
                 `);
                 
-                incomeLayers.addLayer(polygon);
+                incomeCircleLayers.addLayer(circle);
                 
-                // 如果啟用叢集，創建收入區域中心點
+                // 如果啟用叢集，創建收入區域中心點標記
                 if (showCluster) {
-                    const centerLat = (area.bounds[0][0] + area.bounds[1][0]) / 2;
-                    const centerLng = (area.bounds[0][1] + area.bounds[1][1]) / 2;
-                    
                     const marker = L.marker([centerLat, centerLng], {
                         icon: createIcon(color, 'fa-dollar-sign'),
                         income: area.income
@@ -984,7 +1429,7 @@
                             <h4>${area.name}</h4>
                             <p><strong>平均月收入:</strong> ${area.income}萬元</p>
                             <p><strong>收入等級:</strong> ${area.level}</p>
-                            <p><strong>區域範圍:</strong> 約${Math.round(getDistance(area.bounds[0][0], area.bounds[0][1], area.bounds[1][0], area.bounds[1][1])/1000*100)/100}平方公里</p>
+                            <p><strong>影響半徑:</strong> ${circleRadius}公尺</p>
                         </div>
                     `);
                     
@@ -1107,6 +1552,295 @@
             return R * c;
         }
 
+        // 計算公園的交通便利性評分 (0-10)
+        function calculateTransportScore(park) {
+            let score = 0;
+            let nearestMRTDistance = Infinity;
+            let nearestBusDistance = Infinity;
+            let busRouteCount = 0;
+
+            // 計算最近捷運站距離
+            mrtData.forEach(station => {
+                const distance = getDistance(park.lat, park.lng, station.lat, station.lng);
+                if (distance < nearestMRTDistance) {
+                    nearestMRTDistance = distance;
+                }
+            });
+
+            // 計算最近公車站距離和路線數量
+            busData.forEach(busStop => {
+                const distance = getDistance(park.lat, park.lng, busStop.lat, busStop.lng);
+                if (distance < nearestBusDistance) {
+                    nearestBusDistance = distance;
+                }
+                if (distance <= 500) { // 500公尺內的公車站
+                    busRouteCount += busStop.routes.length;
+                }
+            });
+
+            // 捷運距離評分 (0-4分)
+            if (nearestMRTDistance <= 300) score += 4;
+            else if (nearestMRTDistance <= 500) score += 3;
+            else if (nearestMRTDistance <= 800) score += 2;
+            else if (nearestMRTDistance <= 1200) score += 1;
+
+            // 公車距離評分 (0-3分)
+            if (nearestBusDistance <= 200) score += 3;
+            else if (nearestBusDistance <= 400) score += 2;
+            else if (nearestBusDistance <= 600) score += 1;
+
+            // 公車路線數量評分 (0-3分)
+            if (busRouteCount >= 20) score += 3;
+            else if (busRouteCount >= 10) score += 2;
+            else if (busRouteCount >= 5) score += 1;
+
+            return Math.min(score, 10);
+        }
+
+        // 計算設施完善度評分 (0-10)
+        function calculateFacilityScore(park) {
+            const facilityWeights = {
+                shelter: 2.5,   // 遮蔽設施
+                toilet: 2.5,    // 廁所
+                water: 2,       // 飲水設施
+                lighting: 2,    // 照明
+                bench: 1        // 座椅
+            };
+
+            let score = 0;
+            park.facilities.forEach(facility => {
+                if (facilityWeights[facility]) {
+                    score += facilityWeights[facility];
+                }
+            });
+
+            return Math.min(score, 10);
+        }
+
+        // 計算綜合評分
+        function calculateCompositeScore(park) {
+            if (!document.getElementById('enableScoring').checked) return park.suitability;
+
+            const transportWeight = document.getElementById('transportWeight').value / 100;
+            const facilityWeight = document.getElementById('facilityWeight').value / 100;
+            const suitabilityWeight = document.getElementById('suitabilityWeight').value / 100;
+            const safetyWeight = document.getElementById('safetyWeight').value / 100;
+
+            const transportScore = calculateTransportScore(park);
+            const facilityScore = calculateFacilityScore(park);
+            const suitabilityScore = park.suitability;
+            const safetyScore = park.safety_score;
+
+            const compositeScore = (
+                transportScore * transportWeight +
+                facilityScore * facilityWeight +
+                suitabilityScore * suitabilityWeight +
+                safetyScore * safetyWeight
+            );
+
+            return Math.round(compositeScore * 10) / 10; // 四捨五入到小數點後一位
+        }
+
+        // 計算公園周邊的收入區域
+        function getParkIncomeInfo(park) {
+            let nearbyIncomeAreas = [];
+            
+            incomeAreas.forEach(area => {
+                const centerLat = (area.bounds[0][0] + area.bounds[1][0]) / 2;
+                const centerLng = (area.bounds[0][1] + area.bounds[1][1]) / 2;
+                const distance = getDistance(park.lat, park.lng, centerLat, centerLng);
+                
+                if (distance <= 1000) { // 1公里內
+                    nearbyIncomeAreas.push({...area, distance});
+                }
+            });
+            
+            nearbyIncomeAreas.sort((a, b) => a.distance - b.distance);
+            return nearbyIncomeAreas[0] || {name: "未知區域", income: 0, level: "無資料"};
+        }
+
+        // 計算公園周邊的交通資訊
+        function getParkTransportInfo(park) {
+            let nearbyMRT = [];
+            let nearbyBus = [];
+            
+            mrtData.forEach(station => {
+                const distance = getDistance(park.lat, park.lng, station.lat, station.lng);
+                if (distance <= 1000) {
+                    nearbyMRT.push({...station, distance});
+                }
+            });
+            
+            busData.forEach(busStop => {
+                const distance = getDistance(park.lat, park.lng, busStop.lat, busStop.lng);
+                if (distance <= 800) {
+                    nearbyBus.push({...busStop, distance});
+                }
+            });
+            
+            nearbyMRT.sort((a, b) => a.distance - b.distance);
+            nearbyBus.sort((a, b) => a.distance - b.distance);
+            
+            return {
+                mrtCount: nearbyMRT.length,
+                busCount: nearbyBus.length,
+                nearestMRT: nearbyMRT[0] || null,
+                nearestBus: nearbyBus[0] || null,
+                totalBusRoutes: nearbyBus.reduce((sum, bus) => sum + bus.routes.length, 0)
+            };
+        }
+
+        // 更新公園詳細列表
+        function updateParkDetailList() {
+            if (!document.getElementById('showParkList').checked) {
+                document.getElementById('parkListSection').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('parkListSection').style.display = 'block';
+            
+            // 獲取符合篩選條件的公園
+            let filteredParks = parkData.filter(park => {
+                // 適宜度篩選
+                let suitabilityMatch = false;
+                if (park.suitability >= 8 && document.getElementById('highSuitability').checked) suitabilityMatch = true;
+                if (park.suitability >= 5 && park.suitability < 8 && document.getElementById('mediumSuitability').checked) suitabilityMatch = true;
+                if (park.suitability < 5 && document.getElementById('lowSuitability').checked) suitabilityMatch = true;
+                
+                if (!suitabilityMatch) return false;
+                
+                // 設施篩選
+                const facilityFilters = ['shelter', 'bench', 'water', 'toilet', 'lighting'];
+                let facilityMatch = true;
+                facilityFilters.forEach(facility => {
+                    if (document.getElementById(facility).checked && !park.facilities.includes(facility)) {
+                        facilityMatch = false;
+                    }
+                });
+                
+                if (!facilityMatch) return false;
+                
+                // 交通便利性篩選
+                return filterParksByTransport(park);
+            });
+            
+            // 如果只顯示可見公園，進一步篩選
+            if (document.getElementById('showOnlyVisible').checked) {
+                // 這裡可以加入更複雜的可見性邏輯
+            }
+            
+            // 按綜合評分排序
+            filteredParks = filteredParks.map(park => ({
+                ...park,
+                compositeScore: calculateCompositeScore(park),
+                transportScore: calculateTransportScore(park),
+                facilityScore: calculateFacilityScore(park),
+                incomeInfo: getParkIncomeInfo(park),
+                transportInfo: getParkTransportInfo(park)
+            })).sort((a, b) => b.compositeScore - a.compositeScore);
+            
+            // 生成HTML
+            const parkListHtml = filteredParks.map(park => `
+                <div class="park-item" onclick="selectParkFromList('${park.name}', ${park.lat}, ${park.lng})">
+                    <div class="park-name">
+                        ${park.name}
+                        <span class="park-score">${park.compositeScore}</span>
+                    </div>
+                    <div class="park-info">
+                        ${park.description}
+                    </div>
+                    <div class="park-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">收入區域</div>
+                            <div class="stat-value">${park.incomeInfo.name}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">收入水平</div>
+                            <div class="stat-value">${park.incomeInfo.income}萬</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">捷運站</div>
+                            <div class="stat-value">${park.transportInfo.mrtCount}個</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">公車站</div>
+                            <div class="stat-value">${park.transportInfo.busCount}個</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">公車路線</div>
+                            <div class="stat-value">${park.transportInfo.totalBusRoutes}條</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">設施完善度</div>
+                            <div class="stat-value">${park.facilityScore}/10</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('parkDetailList').innerHTML = parkListHtml;
+        }
+
+        // 從列表中選擇公園
+        function selectParkFromList(parkName, lat, lng) {
+            map.setView([lat, lng], 16);
+            
+            parkLayers.eachLayer(layer => {
+                if (layer.getLatLng().lat === lat && layer.getLatLng().lng === lng) {
+                    layer.openPopup();
+                }
+            });
+        }
+
+        // 更新評分排名顯示
+        function updateScoreRanking() {
+            const showRanking = document.getElementById('showScoreRanking').checked;
+            const rankingSection = document.getElementById('scoreRankingSection');
+            
+            if (!showRanking) {
+                rankingSection.style.display = 'none';
+                return;
+            }
+            
+            rankingSection.style.display = 'block';
+            
+            // 計算所有公園的評分並排序
+            const rankedParks = parkData.map(park => ({
+                ...park,
+                compositeScore: calculateCompositeScore(park),
+                transportScore: calculateTransportScore(park),
+                facilityScore: calculateFacilityScore(park)
+            })).sort((a, b) => b.compositeScore - a.compositeScore);
+            
+            // 只顯示前10名
+            const top10Parks = rankedParks.slice(0, 10);
+            
+            const rankingHtml = top10Parks.map((park, index) => `
+                <div class="ranking-item" onclick="selectParkFromRanking('${park.name}', ${park.lat}, ${park.lng})">
+                    <span class="ranking-number">${index + 1}</span>
+                    <strong>${park.name}</strong>
+                    <span class="ranking-score">${park.compositeScore}</span>
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 3px;">
+                        交通:${park.transportScore} | 設施:${park.facilityScore} | 適宜:${park.suitability} | 安全:${park.safety_score}
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('scoreRankingList').innerHTML = rankingHtml;
+        }
+
+        // 從排名中選擇公園
+        function selectParkFromRanking(parkName, lat, lng) {
+            map.setView([lat, lng], 16);
+            
+            // 找到對應的marker並打開popup
+            parkLayers.eachLayer(layer => {
+                if (layer.getLatLng().lat === lat && layer.getLatLng().lng === lng) {
+                    layer.openPopup();
+                }
+            });
+        }
+
         // 更新地圖
         function updateMap() {
             // 清除所有圖層
@@ -1119,6 +1853,9 @@
             renderBusStops();
             renderConvenience();
             renderIncomeAreas();
+            
+            // 更新公園列表
+            updateParkDetailList();
         }
 
         // 重置篩選
@@ -1140,14 +1877,40 @@
             document.getElementById('convenience').checked = true;
             document.getElementById('pharmacy').checked = false;
             document.getElementById('restaurant').checked = false;
+            document.getElementById('showWalkingRange').checked = true;
+            document.getElementById('showTransportRange').checked = true;
+            document.getElementById('showLifeRange').checked = false;
+            document.getElementById('showSafetyRange').checked = false;
+            document.getElementById('showParkLabels').checked = true;
+            document.getElementById('enableScoring').checked = true;
+            document.getElementById('showParkList').checked = true;
+            document.getElementById('showOnlyVisible').checked = false;
             
             document.getElementById('mrtDistance').value = 1000;
             document.getElementById('busDistance').value = 500;
             document.getElementById('incomeRange').value = 60;
+            document.getElementById('walkingRadius').value = 200;
+            document.getElementById('transportRadius').value = 600;
+            document.getElementById('lifeRadius').value = 800;
+            document.getElementById('safetyRadius').value = 400;
+            document.getElementById('incomeCircleRadius').value = 700;
+            document.getElementById('transportWeight').value = 35;
+            document.getElementById('facilityWeight').value = 25;
+            document.getElementById('suitabilityWeight').value = 30;
+            document.getElementById('safetyWeight').value = 10;
             
             document.getElementById('mrtValue').textContent = '1000公尺內';
             document.getElementById('busValue').textContent = '500公尺內';
             document.getElementById('incomeValue').textContent = '60萬以下區域';
+            document.getElementById('walkingRadiusValue').textContent = '200公尺';
+            document.getElementById('transportRadiusValue').textContent = '600公尺';
+            document.getElementById('lifeRadiusValue').textContent = '800公尺';
+            document.getElementById('safetyRadiusValue').textContent = '400公尺';
+            document.getElementById('incomeCircleRadiusValue').textContent = '700公尺';
+            document.getElementById('transportWeightValue').textContent = '35%';
+            document.getElementById('facilityWeightValue').textContent = '25%';
+            document.getElementById('suitabilityWeightValue').textContent = '30%';
+            document.getElementById('safetyWeightValue').textContent = '10%';
             
             updateMap();
         }
@@ -1166,6 +1929,63 @@
         document.getElementById('incomeRange').addEventListener('input', function(e) {
             document.getElementById('incomeValue').textContent = e.target.value + '萬以下區域';
             updateMap();
+        });
+
+        // 功能圓圈半徑滑桿事件監聽器
+        document.getElementById('walkingRadius').addEventListener('input', function(e) {
+            document.getElementById('walkingRadiusValue').textContent = e.target.value + '公尺';
+            updateMap();
+        });
+
+        document.getElementById('transportRadius').addEventListener('input', function(e) {
+            document.getElementById('transportRadiusValue').textContent = e.target.value + '公尺';
+            updateMap();
+        });
+
+        document.getElementById('lifeRadius').addEventListener('input', function(e) {
+            document.getElementById('lifeRadiusValue').textContent = e.target.value + '公尺';
+            updateMap();
+        });
+
+        document.getElementById('safetyRadius').addEventListener('input', function(e) {
+            document.getElementById('safetyRadiusValue').textContent = e.target.value + '公尺';
+            updateMap();
+        });
+
+        // 收入區域圓圈半徑滑桿事件監聽器
+        document.getElementById('incomeCircleRadius').addEventListener('input', function(e) {
+            document.getElementById('incomeCircleRadiusValue').textContent = e.target.value + '公尺';
+            updateMap();
+        });
+
+        // 評分權重滑桿事件監聽器
+        document.getElementById('transportWeight').addEventListener('input', function(e) {
+            document.getElementById('transportWeightValue').textContent = e.target.value + '%';
+            updateMap();
+        });
+
+        document.getElementById('facilityWeight').addEventListener('input', function(e) {
+            document.getElementById('facilityWeightValue').textContent = e.target.value + '%';
+            updateMap();
+        });
+
+        document.getElementById('suitabilityWeight').addEventListener('input', function(e) {
+            document.getElementById('suitabilityWeightValue').textContent = e.target.value + '%';
+            updateMap();
+        });
+
+        document.getElementById('safetyWeight').addEventListener('input', function(e) {
+            document.getElementById('safetyWeightValue').textContent = e.target.value + '%';
+            updateMap();
+        });
+
+        // 公園列表顯示切換
+        document.getElementById('showParkList').addEventListener('change', function(e) {
+            updateParkDetailList();
+        });
+
+        document.getElementById('showOnlyVisible').addEventListener('change', function(e) {
+            updateParkDetailList();
         });
 
         // 篩選條件變化時更新地圖
