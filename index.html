@@ -3,8 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIS圖台系統</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <title>流浪公園圖台</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    
     <style>
         * {
             margin: 0;
@@ -14,689 +24,1162 @@
 
         body {
             font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            height: 100vh;
-            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
 
-        .gis-container {
-            display: flex;
-            height: 100vh;
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            height: 80vh;
         }
 
         .sidebar {
-            width: 300px;
-            background: #2c3e50;
-            color: white;
-            overflow-y: auto;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-
-        .sidebar-header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
             padding: 20px;
-            background: #34495e;
-            border-bottom: 1px solid #445566;
-        }
-
-        .sidebar-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .sidebar-subtitle {
-            font-size: 12px;
-            color: #bdc3c7;
-        }
-
-        .layer-section {
-            padding: 15px;
-            border-bottom: 1px solid #445566;
-        }
-
-        .layer-title {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #3498db;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .layer-title::before {
-            content: '▼';
-            margin-right: 8px;
-            transition: transform 0.3s ease;
-        }
-
-        .layer-title.collapsed::before {
-            transform: rotate(-90deg);
-        }
-
-        .layer-items {
-            margin-left: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .layer-items.collapsed {
-            display: none;
-        }
-
-        .layer-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .layer-item:hover {
-            background: rgba(52, 152, 219, 0.1);
-            border-radius: 4px;
-        }
-
-        .layer-checkbox {
-            margin-right: 10px;
-            transform: scale(1.2);
-        }
-
-        .layer-icon {
-            width: 16px;
-            height: 16px;
-            margin-right: 8px;
-            border-radius: 2px;
-            display: inline-block;
-        }
-
-        .layer-label {
-            font-size: 13px;
-            flex: 1;
-        }
-
-        .scale-info {
-            font-size: 10px;
-            color: #95a5a6;
-            margin-left: auto;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .map-container {
-            flex: 1;
             position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
 
         #map {
-            width: 100%;
             height: 100%;
+            width: 100%;
         }
 
-        .map-controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
+        .filter-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: linear-gradient(145deg, #f0f4f8, #e2e8f0);
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
         }
 
-        .control-panel {
-            background: rgba(255,255,255,0.95);
-            padding: 10px;
-            border-radius: 6px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            margin-bottom: 10px;
-            min-width: 200px;
-        }
-
-        .control-title {
-            font-size: 12px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 8px;
-        }
-
-        .zoom-display {
-            font-size: 14px;
-            color: #34495e;
-            text-align: center;
-            padding: 5px;
-            background: #ecf0f1;
-            border-radius: 4px;
-        }
-
-        .layer-visibility-info {
-            margin-top: 8px;
-            font-size: 11px;
-            color: #7f8c8d;
-            line-height: 1.4;
-        }
-
-        .custom-marker {
+        .filter-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 2px 6px;
-            border-radius: 3px;
-            border: 2px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            font-size: 12px;
-            font-weight: bold;
-            white-space: nowrap;
+            gap: 8px;
         }
 
-        .marker-icon {
+        .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #4a5568;
+            transition: color 0.2s;
+        }
+
+        .filter-group label:hover {
+            color: #2d3748;
+        }
+
+        .filter-group input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+
+        .range-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .range-value {
+            text-align: center;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-top: 5px;
+        }
+
+        .legend {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .legend h4 {
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .legend-color {
             width: 16px;
             height: 16px;
-            border-radius: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 8px;
-            font-weight: bold;
-        }
-
-        .seven-eleven-marker {
-            background: rgba(0, 166, 81, 0.9);
-            color: #00a651;
-            text-shadow: 1px 1px 0 white;
-        }
-
-        .family-mart-marker {
-            background: rgba(0, 102, 204, 0.9);
-            color: #0066cc;
-            text-shadow: 1px 1px 0 white;
-        }
-
-        .hi-life-marker {
-            background: rgba(230, 0, 18, 0.9);
-            color: #e60012;
-            text-shadow: 1px 1px 0 white;
-        }
-
-        .ok-mart-marker {
-            background: rgba(51, 51, 51, 0.9);
-            color: #333333;
-            text-shadow: 1px 1px 0 white;
+            border-radius: 3px;
+            margin-right: 8px;
+            border: 1px solid #ccc;
         }
 
         .search-box {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .search-suggestion {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+
+        .search-suggestion:hover {
+            background-color: #f8f9fa;
+        }
+
+        .search-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .info-panel {
             position: absolute;
             top: 10px;
             right: 10px;
-            z-index: 1000;
-        }
-
-        .search-input {
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            width: 250px;
-            font-size: 14px;
-        }
-
-        .status-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(44, 62, 80, 0.9);
-            color: white;
-            padding: 8px 15px;
-            font-size: 12px;
-            display: flex;
-            justify-content: space-between;
-            z-index: 1000;
-        }
-
-        .coordinates {
-            font-family: 'Courier New', monospace;
-        }
-
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            z-index: 2000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
             display: none;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .leaflet-popup-content {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+        }
+
+        .popup-content h4 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+
+        .popup-content p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 8px 0;
+        }
+
+        .star {
+            color: #ffd700;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .sidebar {
+                order: 2;
+                max-height: 400px;
+            }
+            
+            .map-container {
+                order: 1;
+                height: 50vh;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .btn {
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .facility-icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        /* 收入區域叢集樣式 */
+        .income-cluster {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid #333;
+            border-radius: 50%;
+            text-align: center;
+            font-weight: bold;
+            line-height: 1;
+            color: #333;
+        }
+
+        .income-cluster.high-income {
+            border-color: #4CAF50;
+            color: #4CAF50;
+        }
+
+        .income-cluster.medium-high-income {
+            border-color: #FF9800;
+            color: #FF9800;
+        }
+
+        .income-cluster.medium-income {
+            border-color: #2196F3;
+            color: #2196F3;
+        }
+
+        .income-cluster.low-medium-income {
+            border-color: #9C27B0;
+            color: #9C27B0;
+        }
+
+        .search-container {
+            position: relative;
         }
     </style>
 </head>
 <body>
-    <div class="gis-container">
-        <!-- 左側圖層控制面板 -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-title">GIS圖台系統</div>
-                <div class="sidebar-subtitle">圖層管理與控制</div>
-            </div>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-tree"></i> 流浪公園圖台</h1>
+            <p>尋找適合夜宿的安全公園，提供完整的設施與周邊資訊</p>
+        </header>
 
-            <!-- 基礎圖層 -->
-            <div class="layer-section">
-                <div class="layer-title" onclick="toggleSection(this)">其他基礎圖</div>
-                <div class="layer-items">
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="county-boundary" checked>
-                        <div class="layer-icon" style="background: #000000;"></div>
-                        <label class="layer-label" for="county-boundary">縣市界</label>
-                        <span class="scale-info">6-20</span>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="village-boundary" checked>
-                        <div class="layer-icon" style="background: #929299; height: 2px; margin-top: 7px;"></div>
-                        <label class="layer-label" for="village-boundary">里界</label>
-                        <span class="scale-info">13-20</span>
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="search-container">
+                    <input type="text" class="search-box" placeholder="🔍 搜尋公園名稱..." id="searchBox">
+                    <div class="search-suggestions" id="searchSuggestions"></div>
+                </div>
+                
+                <div class="filter-section">
+                    <h3><i class="fas fa-star"></i> 夜宿適宜度</h3>
+                    <div class="filter-group">
+                        <label><input type="checkbox" id="highSuitability" checked> ⭐ 高適宜度 (8-10分)</label>
+                        <label><input type="checkbox" id="mediumSuitability" checked> 🔶 中適宜度 (5-7分)</label>
+                        <label><input type="checkbox" id="lowSuitability"> ❌ 低適宜度 (1-4分)</label>
                     </div>
                 </div>
-            </div>
 
-            <!-- 商業設施 -->
-            <div class="layer-section">
-                <div class="layer-title" onclick="toggleSection(this)">商業設施</div>
-                <div class="layer-items">
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="seven-eleven" checked>
-                        <div class="layer-icon" style="background: #00a651;"></div>
-                        <label class="layer-label" for="seven-eleven">7-ELEVEN</label>
-                        <span class="scale-info">14-20</span>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="family-mart" checked>
-                        <div class="layer-icon" style="background: #0066cc;"></div>
-                        <label class="layer-label" for="family-mart">全家便利商店</label>
-                        <span class="scale-info">14-20</span>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="hi-life" checked>
-                        <div class="layer-icon" style="background: #e60012;"></div>
-                        <label class="layer-label" for="hi-life">萊爾富</label>
-                        <span class="scale-info">14-20</span>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="ok-mart" checked>
-                        <div class="layer-icon" style="background: #333333;"></div>
-                        <label class="layer-label" for="ok-mart">OK便利商店</label>
-                        <span class="scale-info">14-20</span>
+                <div class="filter-section">
+                    <h3><i class="fas fa-home"></i> 必要設施</h3>
+                    <div class="filter-group">
+                        <label><input type="checkbox" id="shelter"> 🏠 遮蔽設施</label>
+                        <label><input type="checkbox" id="bench"> 🪑 座椅/長椅</label>
+                        <label><input type="checkbox" id="water"> 💧 飲水設施</label>
+                        <label><input type="checkbox" id="toilet"> 🚻 公共廁所</label>
+                        <label><input type="checkbox" id="lighting"> 💡 夜間照明</label>
                     </div>
                 </div>
-            </div>
 
-            <!-- 電子地圖 -->
-            <div class="layer-section">
-                <div class="layer-title" onclick="toggleSection(this)">電子地圖</div>
-                <div class="layer-items">
-                    <div class="layer-item">
-                        <input type="radio" name="basemap" class="layer-checkbox" id="osm-map" checked>
-                        <div class="layer-icon" style="background: linear-gradient(45deg, #4CAF50, #2196F3);"></div>
-                        <label class="layer-label" for="osm-map">OpenStreetMap</label>
+                <div class="filter-section">
+                    <h3><i class="fas fa-subway"></i> 交通便利性</h3>
+                    <div class="filter-group">
+                        <label>捷運站距離 (公尺)</label>
+                        <input type="range" class="range-slider" id="mrtDistance" min="0" max="2000" value="1000" step="100">
+                        <div class="range-value" id="mrtValue">1000公尺內</div>
                     </div>
-                    <div class="layer-item">
-                        <input type="radio" name="basemap" class="layer-checkbox" id="satellite-map">
-                        <div class="layer-icon" style="background: linear-gradient(45deg, #8BC34A, #FFC107);"></div>
-                        <label class="layer-label" for="satellite-map">衛星影像</label>
+                    <div class="filter-group">
+                        <label>公車站距離 (公尺)</label>
+                        <input type="range" class="range-slider" id="busDistance" min="0" max="1000" value="500" step="50">
+                        <div class="range-value" id="busValue">500公尺內</div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 主地圖區域 -->
-        <div class="map-container">     
-            <div id="map"></div>
-            
-            <!-- 地圖控制面板 -->
-            <div class="map-controls">
-                <div class="control-panel">
-                    <div class="control-title">縮放等級</div>
-                    <div class="zoom-display" id="zoom-display">15</div>
-                    <div class="layer-visibility-info" id="visibility-info">
-                        顯示: 商業設施 + 標籤<br>
-                        比例尺: 1:15,000
+                    <div class="filter-group">
+                        <label><input type="checkbox" id="showMRT" checked> 顯示捷運站</label>
+                        <label><input type="checkbox" id="showBus" checked> 顯示公車站</label>
+                        <label><input type="checkbox" id="showBike"> 顯示YouBike</label>
                     </div>
                 </div>
+
+                <div class="filter-section">
+                    <h3><i class="fas fa-dollar-sign"></i> 收入區域篩選</h3>
+                    <div class="filter-group">
+                        <label>區域平均收入 (萬元/月)</label>
+                        <input type="range" class="range-slider" id="incomeRange" min="25" max="80" value="60" step="5">
+                        <div class="range-value" id="incomeValue">60萬以下區域</div>
+                    </div>
+                    <div class="filter-group">
+                        <label><input type="checkbox" id="showIncomeLayer" checked> 顯示收入分析圖層</label>
+                        <label><input type="checkbox" id="onlySelectedIncome"> 僅顯示選定收入區域</label>
+                        <label><input type="checkbox" id="showIncomeCluster" checked> 顯示收入區域叢集</label>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3><i class="fas fa-store"></i> 生活機能</h3>
+                    <div class="filter-group">
+                        <label><input type="checkbox" id="convenience" checked> 🏪 便利商店</label>
+                        <label><input type="checkbox" id="pharmacy"> 💊 藥局</label>
+                        <label><input type="checkbox" id="restaurant"> 🍔 餐廳</label>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <h4>圖例說明</h4>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #4CAF50;"></span>
+                        高適宜度公園 (8-10分)
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #FF9800;"></span>
+                        中適宜度公園 (5-7分)
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #F44336;"></span>
+                        低適宜度公園 (1-4分)
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #2196F3;"></span>
+                        捷運站 / BRT站
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #FF5722;"></span>
+                        公車站
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #4CAF50;"></span>
+                        高收入區 (60萬+)
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #FF9800;"></span>
+                        中高收入區 (45-60萬)
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #2196F3;"></span>
+                        中等收入區 (35-45萬)
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #9C27B0;"></span>
+                        中低收入區 (25-35萬)
+                    </div>
+                </div>
+
+                <button class="btn" onclick="resetFilters()">
+                    <i class="fas fa-refresh"></i> 重置篩選
+                </button>
             </div>
 
-            <!-- 搜尋框 -->
-            <div class="search-box">
-                <input type="text" class="search-input" placeholder="搜尋地址、店家名稱..." id="search-input">
-            </div>
-
-            <!-- 載入指示器 -->
-            <div class="loading" id="loading">
-                載入圖層資料中...
-            </div>
-
-            <!-- 狀態列 -->
-            <div class="status-bar">
-                <div class="coordinates" id="coordinates">經度: 121.3015, 緯度: 24.9668</div>
-                <div id="layer-count">已載入圖層: 6</div>
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="info-panel" id="infoPanel">
+                    <h4 id="infoPanelTitle">資訊面板</h4>
+                    <div id="infoPanelContent"></div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <!-- Leaflet MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
     <script>
-        // 初始化地圖 (桃園市中心)
-        const map = L.map('map', {
-            center: [24.9668, 121.3015],
-            zoom: 15,
-            zoomControl: false
-        });
+        // 初始化地圖 (以台中市中心為中心)
+        let map = L.map('map').setView([24.1477, 120.6736], 12);
 
-        // 添加縮放控制到右下角
-        L.control.zoom({
-            position: 'bottomright'
-        }).addTo(map);
-
-        // 基礎圖層
-        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // 添加底圖
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '© Esri'
-        });
-
         // 圖層群組
-        const countyBoundaryLayer = L.layerGroup().addTo(map);
-        const villageBoundaryLayer = L.layerGroup().addTo(map);
-        const sevenElevenLayer = L.layerGroup().addTo(map);
-        const familyMartLayer = L.layerGroup().addTo(map);
-        const hiLifeLayer = L.layerGroup().addTo(map);
-        const okMartLayer = L.layerGroup().addTo(map);
+        let parkLayers = L.layerGroup().addTo(map);
+        let transportLayers = L.layerGroup().addTo(map);
+        let facilityLayers = L.layerGroup().addTo(map);
+        let incomeLayers = L.layerGroup().addTo(map);
+        let incomeClusterGroup = L.markerClusterGroup({
+            iconCreateFunction: function(cluster) {
+                const markers = cluster.getAllChildMarkers();
+                const avgIncome = markers.reduce((sum, marker) => sum + marker.options.income, 0) / markers.length;
+                
+                let className = 'income-cluster';
+                if (avgIncome >= 60) className += ' high-income';
+                else if (avgIncome >= 45) className += ' medium-high-income';
+                else if (avgIncome >= 35) className += ' medium-income';
+                else className += ' low-medium-income';
+                
+                return L.divIcon({
+                    html: '<div class="' + className + '">' + markers.length + '</div>',
+                    className: 'marker-cluster',
+                    iconSize: L.point(40, 40)
+                });
+            },
+            maxClusterRadius: 80
+        }).addTo(map);
 
-        // 模擬行政區邊界
-        function addCountyBoundaries() {
-            const taoyuanBounds = [
-                [24.8, 121.1],
-                [25.1, 121.1], 
-                [25.1, 121.5],
-                [24.8, 121.5]
-            ];
+        const incomeAreas = [
+            // 高收入區域 (60萬以上)
+            {name: "七期重劃區", bounds: [[24.1589, 120.6312], [24.1723, 120.6445]], income: 75, level: "高收入區"},
+            {name: "西屯惠來里", bounds: [[24.1634, 120.6223], [24.1756, 120.6356]], income: 72, level: "高收入區"},
+            {name: "南屯豐富里", bounds: [[24.1423, 120.6189], [24.1512, 120.6312]], income: 68, level: "高收入區"},
+            {name: "北屯廍子重劃區", bounds: [[24.1789, 120.7012], [24.1878, 120.7145]], income: 65, level: "高收入區"},
+            {name: "西區美術園道", bounds: [[24.1501, 120.6567], [24.1578, 120.6689]], income: 63, level: "高收入區"},
             
-            L.polygon(taoyuanBounds, {
-                color: '#000000',
-                weight: 12,
-                fillOpacity: 0.1,
-                fillColor: '#ffffff'
-            }).bindPopup('桃園市').addTo(countyBoundaryLayer);
-        }
+            // 中高收入區域 (45-60萬)
+            {name: "北屯松竹區", bounds: [[24.1789, 120.6823], [24.1889, 120.6923]], income: 58, level: "中高收入區"},
+            {name: "西屯朝馬區", bounds: [[24.1689, 120.6123], [24.1756, 120.6234]], income: 55, level: "中高收入區"},
+            {name: "南區興大區", bounds: [[24.1201, 120.6789], [24.1289, 120.6889]], income: 52, level: "中高收入區"},
+            {name: "北區一中商圈", bounds: [[24.1534, 120.6712], [24.1634, 120.6823]], income: 50, level: "中高收入區"},
+            {name: "文心森林公園周邊", bounds: [[24.1356, 120.6423], [24.1423, 120.6489]], income: 48, level: "中高收入區"},
+            
+            // 中等收入區域 (35-45萬)
+            {name: "東區樂成區", bounds: [[24.1334, 120.6889], [24.1423, 120.6989]], income: 42, level: "中等收入區"},
+            {name: "中區台中車站", bounds: [[24.1389, 120.6789], [24.1478, 120.6889]], income: 40, level: "中等收入區"},
+            {name: "太平新光區", bounds: [[24.1123, 120.7123], [24.1234, 120.7234]], income: 38, level: "中等收入區"},
+            {name: "大里草湖區", bounds: [[24.0889, 120.6789], [24.1023, 120.6889]], income: 36, level: "中等收入區"},
+            {name: "豐原市中心", bounds: [[24.2456, 120.7156], [24.2567, 120.7267]], income: 35, level: "中等收入區"},
+            
+            // 中低收入區域 (25-35萬)
+            {name: "烏日區", bounds: [[24.1023, 120.6123], [24.1156, 120.6267]], income: 32, level: "中低收入區"},
+            {name: "霧峰區", bounds: [[24.0589, 120.6889], [24.0723, 120.7023]], income: 30, level: "中低收入區"},
+            {name: "潭子頭家區", bounds: [[24.2089, 120.6889], [24.2189, 120.6989]], income: 28, level: "中低收入區"},
+            {name: "大雅區", bounds: [[24.2223, 120.6456], [24.2334, 120.6567]], income: 27, level: "中低收入區"},
+            {name: "清水區", bounds: [[24.2589, 120.5623], [24.2723, 120.5756]], income: 25, level: "中低收入區"}
+        ];
 
-        // 模擬里界
-        function addVillageBoundaries() {
-            const villages = [
-                { bounds: [[24.95, 121.28], [24.97, 121.28], [24.97, 121.32], [24.95, 121.32]], name: '中正里' },
-                { bounds: [[24.97, 121.28], [24.99, 121.28], [24.99, 121.32], [24.97, 121.32]], name: '文化里' },
-                { bounds: [[24.95, 121.32], [24.97, 121.32], [24.97, 121.36], [24.95, 121.36]], name: '永安里' }
-            ];
+        // 台中公車站資料
+        const busData = [
+            // 主要公車站
+            {name: "台中車站", lat: 24.1369, lng: 120.6863, routes: ["1", "6", "9", "14", "15", "18", "21", "35", "71", "100", "101", "102", "103", "105", "106", "107", "108"]},
+            {name: "中友百貨", lat: 24.1534, lng: 120.6823, routes: ["6", "9", "33", "35", "41", "61", "71", "131", "132", "142", "146"]},
+            {name: "一中商圈", lat: 24.1556, lng: 120.6789, routes: ["6", "9", "33", "35", "41", "61", "71", "131", "132", "142"]},
+            {name: "科博館", lat: 24.1523, lng: 120.6723, routes: ["11", "23", "35", "37", "71", "75", "83", "102", "103", "105"]},
+            {name: "廣三SOGO", lat: 24.1489, lng: 120.6689, routes: ["11", "23", "35", "37", "71", "75", "83", "102", "103"]},
+            {name: "文心森林公園", lat: 24.1389, lng: 120.6456, routes: ["23", "53", "73", "77", "290", "356", "359"]},
+            {name: "豐樂公園", lat: 24.1278, lng: 120.6534, routes: ["53", "73", "77", "290", "356", "359"]},
+            {name: "秋紅谷", lat: 24.1634, lng: 120.6334, routes: ["25", "45", "161", "323", "324", "325", "326"]},
+            {name: "朝馬", lat: 24.1723, lng: 120.6234, routes: ["25", "45", "161", "323", "324", "325", "326"]},
+            {name: "新光三越", lat: 24.1656, lng: 120.6389, routes: ["25", "45", "161", "323", "324", "325"]},
+            {name: "市政府", lat: 24.1623, lng: 120.6445, routes: ["25", "45", "161", "323", "324", "325"]},
+            {name: "豐原車站", lat: 24.2523, lng: 120.7234, routes: ["12", "63", "90", "91", "92", "93", "186", "206", "207", "208", "209", "213", "218", "220", "227", "228", "229", "235", "236", "237", "238", "239"]},
+            {name: "大里車站", lat: 24.0998, lng: 120.6789, routes: ["50", "53", "59", "74", "100", "107", "108", "131", "132", "201", "280", "285"]},
+            {name: "太平車站", lat: 24.1234, lng: 120.7234, routes: ["15", "41", "74", "163", "280", "285", "286", "287", "288"]},
+            {name: "烏日車站", lat: 24.1089, lng: 120.6234, routes: ["26", "69", "99", "102", "105", "617", "655"]},
+            {name: "霧峰", lat: 24.0678, lng: 120.6923, routes: ["50", "59", "201", "281", "282", "283", "284"]},
+            {name: "潭子車站", lat: 24.2123, lng: 120.7034, routes: ["63", "65", "178", "900", "901", "920", "921", "922"]},
+            {name: "大雅", lat: 24.2289, lng: 120.6534, routes: ["65", "128", "133", "154", "700", "701", "704"]},
+            {name: "神岡", lat: 24.2456, lng: 120.6712, routes: ["63", "65", "154", "700", "701", "704"]},
+            {name: "后里車站", lat: 24.3123, lng: 120.7156, routes: ["155", "214", "215", "616", "811", "813"]},
+            {name: "東勢", lat: 24.2634, lng: 120.8234, routes: ["153", "206", "207", "208", "209", "850", "865", "866", "867"]},
+            {name: "清水車站", lat: 24.2645, lng: 120.5689, routes: ["111", "115", "123", "128", "166", "167", "168", "169", "170", "171", "172", "173", "174", "175", "176", "177", "178", "179", "180", "181", "182", "183", "184", "185"]},
+            {name: "沙鹿車站", lat: 24.2345, lng: 120.5689, routes: ["166", "167", "168", "169", "170", "171", "172", "173", "174"]},
+            {name: "梧棲", lat: 24.2890, lng: 120.5234, routes: ["123", "128", "166", "167", "168", "169"]},
+            {name: "龍井車站", lat: 24.1923, lng: 120.5456, routes: ["617", "655", "656", "657", "658", "659"]},
+            {name: "大甲車站", lat: 24.3456, lng: 120.6234, routes: ["185", "186", "187", "188", "189", "190", "191", "192", "193", "194", "195"]}
+        ];
 
-            villages.forEach(village => {
-                L.polygon(village.bounds, {
-                    color: '#929299',
-                    weight: 1.2,
-                    fillOpacity: 0.05,
-                    fillColor: '#ffffff'
-                }).bindPopup(village.name).addTo(villageBoundaryLayer);
+        // 台中市公園資料 (100+個點位)
+        const parkData = [
+            // 中區
+            {name: "台中公園", lat: 24.1441, lng: 120.6813, suitability: 8, facilities: ["shelter", "bench", "water", "toilet", "lighting"], description: "台中市最具歷史的公園，湖心亭為地標。", income_level: "中收入區", safety_score: 8},
+            {name: "中山公園", lat: 24.1401, lng: 120.6789, suitability: 7, facilities: ["bench", "lighting"], description: "市中心小型公園，交通便利。", income_level: "中收入區", safety_score: 7},
+            {name: "民權公園", lat: 24.1456, lng: 120.6834, suitability: 6, facilities: ["bench", "water"], description: "社區型公園，設施簡單。", income_level: "中收入區", safety_score: 6},
+            
+            // 東區
+            {name: "樂成公園", lat: 24.1378, lng: 120.6912, suitability: 9, facilities: ["shelter", "bench", "water", "toilet", "lighting"], description: "設施完善的大型公園，適合夜宿。", income_level: "中收入區", safety_score: 9},
+            {name: "旱溪東路公園", lat: 24.1345, lng: 120.6987, suitability: 7, facilities: ["shelter", "bench", "lighting"], description: "河岸公園，環境清幽。", income_level: "中收入區", safety_score: 7},
+            {name: "東門公園", lat: 24.1412, lng: 120.6923, suitability: 6, facilities: ["bench", "water"], description: "小型鄰里公園。", income_level: "中收入區", safety_score: 6},
+            {name: "復興公園", lat: 24.1389, lng: 120.6945, suitability: 8, facilities: ["shelter", "bench", "toilet", "lighting"], description: "社區中心型公園，安全性佳。", income_level: "中收入區", safety_score: 8},
+            {name: "進德公園", lat: 24.1356, lng: 120.6967, suitability: 5, facilities: ["bench"], description: "較小的社區公園。", income_level: "中收入區", safety_score: 5},
+            
+            // 西區
+            {name: "草悟道", lat: 24.1519, lng: 120.6644, suitability: 7, facilities: ["lighting", "bench"], description: "知名綠園道，但夜間較多人群。", income_level: "高收入區", safety_score: 7},
+            {name: "美術園道", lat: 24.1534, lng: 120.6623, suitability: 6, facilities: ["bench", "lighting"], description: "藝文區域，環境優美。", income_level: "高收入區", safety_score: 6},
+            {name: "忠明公園", lat: 24.1487, lng: 120.6578, suitability: 8, facilities: ["shelter", "bench", "water", "toilet"], description: "設施良好的住宅區公園。", income_level: "高收入區", safety_score: 8},
+            {name: "向上公園", lat: 24.1423, lng: 120.6545, suitability: 7, facilities: ["bench", "water", "lighting"], description: "社區公園，環境整潔。", income_level: "中收入區", safety_score: 7},
+            {name: "英才公園", lat: 24.1456, lng: 120.6612, suitability: 6, facilities: ["bench", "lighting"], description: "校園附近公園。", income_level: "中收入區", safety_score: 6},
+            
+            // 南區
+            {name: "興大康橋", lat: 24.1245, lng: 120.6823, suitability: 8, facilities: ["shelter", "bench", "water", "lighting"], description: "大學附近，環境優美。", income_level: "中收入區", safety_score: 8},
+            {name: "中興大學校園", lat: 24.1234, lng: 120.6798, suitability: 7, facilities: ["bench", "water", "toilet"], description: "校園綠地，夜間較安靜。", income_level: "中收入區", safety_score: 7},
+            {name: "文心森林公園", lat: 24.1389, lng: 120.6456, suitability: 9, facilities: ["shelter", "bench", "water", "toilet", "lighting"], description: "大型森林公園，設施完善。", income_level: "中收入區", safety_score: 9},
+            {name: "豐樂雕塑公園", lat: 24.1278, lng: 120.6534, suitability: 8, facilities: ["shelter", "bench", "water", "toilet"], description: "藝術主題公園，環境佳。", income_level: "中收入區", safety_score: 8},
+            {name: "南屯公園", lat: 24.1234, lng: 120.6456, suitability: 6, facilities: ["bench", "lighting"], description: "社區型公園。", income_level: "中收入區", safety_score: 6},
+            
+            // 北區
+            {name: "北屯兒童公園", lat: 24.1612, lng: 120.6823, suitability: 7, facilities: ["shelter", "bench", "water"], description: "親子公園，設施較新。", income_level: "中收入區", safety_score: 7},
+            {name: "新民公園", lat: 24.1578, lng: 120.6756, suitability: 6, facilities: ["bench", "lighting"], description: "住宅區小公園。", income_level: "中收入區", safety_score: 6},
+            {name: "健行公園", lat: 24.1623, lng: 120.6789, suitability: 8, facilities: ["shelter", "bench", "water", "toilet"], description: "運動休閒公園。", income_level: "中收入區", safety_score: 8},
+            {name: "中清公園", lat: 24.1645, lng: 120.6712, suitability: 5, facilities: ["bench"], description: "較小型的社區公園。", income_level: "中收入區", safety_score: 5},
+            
+            // 北屯區
+            {name: "廍子公園", lat: 24.1812, lng: 120.7123, suitability: 9, facilities: ["shelter", "bench", "water", "toilet", "lighting"], description: "新興區域大型公園，設施完善。", income_level: "高收入區", safety_score: 9},
+            {name: "四維公園", lat: 24.1734, lng: 120.6998, suitability: 7, facilities: ["bench", "water", "lighting"], description: "住宅區公園，環境清幽。", income_level: "中收入區", safety_score: 7},
+            {name: "北屯公園", lat: 24.1698, lng: 120.6923, suitability: 8, facilities: ["shelter", "bench", "toilet", "lighting"], description: "區域性公園，設施良好。", income_level: "中收入區", safety_score: 8},
+            {name: "松竹公園", lat: 24.1823, lng: 120.6876, suitability: 6, facilities: ["bench", "lighting"], description: "捷運站附近小公園。", income_level: "中收入區", safety_score: 6},
+            {name: "軍功公園", lat: 24.1856, lng: 120.7034, suitability: 7, facilities: ["shelter", "bench", "water"], description: "山區邊緣公園，空氣佳。", income_level: "中收入區", safety_score: 7},
+            
+            // 西屯區
+            {name: "秋紅谷生態公園", lat: 24.1634, lng: 120.6334, suitability: 8, facilities: ["shelter", "bench", "lighting"], description: "知名生態公園，但夜間人流多。", income_level: "高收入區", safety_score: 7},
+            {name: "朝馬公園", lat: 24.1723, lng: 120.6234, suitability: 6, facilities: ["bench", "water"], description: "交通要道旁公園。", income_level: "高收入區", safety_score: 6},
+            {name: "福安公園", lat: 24.1689, lng: 120.6145, suitability: 7, facilities: ["shelter", "bench", "toilet"], description: "住宅區公園，設施中等。", income_level: "高收入區", safety_score: 7},
+            {name: "何厝公園", lat: 24.1756, lng: 120.6278, suitability: 5, facilities: ["bench"], description: "小型社區公園。", income_level: "中收入區", safety_score: 5},
+            {name: "西屯公園", lat: 24.1612, lng: 120.6156, suitability: 8, facilities: ["shelter", "bench", "water", "toilet"], description: "區域中心公園，設施完善。", income_level: "中收入區", safety_score: 8},
+            
+            // 南屯區
+            {name: "豐富公園", lat: 24.1456, lng: 120.6312, suitability: 9, facilities: ["shelter", "bench", "water", "toilet", "lighting"], description: "高級住宅區公園，設施優良。", income_level: "高收入區", safety_score: 9},
+            {name: "南屯親子公園", lat: 24.1378, lng: 120.6234, suitability: 8, facilities: ["shelter", "bench", "water", "toilet"], description: "親子友善公園，安全性高。", income_level: "高收入區", safety_score: 8},
+            {name: "春安公園", lat: 24.1423, lng: 120.6189, suitability: 7, facilities: ["bench", "water", "lighting"], description: "社區公園，環境良好。", income_level: "中收入區", safety_score: 7},
+            {name: "向心公園", lat: 24.1512, lng: 120.6267, suitability: 6, facilities: ["bench", "lighting"], description: "小型鄰里公園。", income_level: "中收入區", safety_score: 6},
+            
+            // 太平區
+            {name: "太平買菸場", lat: 24.1234, lng: 120.7234, suitability: 7, facilities: ["shelter", "bench", "water"], description: "文創園區綠地，環境特殊。", income_level: "中收入區", safety_score: 7},
+            {name: "頭汴坑蝙蝠洞公園", lat: 24.1123, lng: 120.7345, suitability: 5, facilities: ["bench"], description: "山區公園，較偏僻。", income_level: "低收入區", safety_score: 4},
+            {name: "太平公園", lat: 24.1189, lng: 120.7198, suitability: 8, facilities: ["shelter", "bench", "water", "toilet"], description: "區域主要公園，設施完善。", income_level: "中收入區", safety_score: 8},
+            {name: "新光公園", lat: 24.1145, lng: 120.7156, suitability: 6, facilities: ["bench", "lighting"], description: "住宅區公園。", income_level: "中收入區", safety_score: 6},
+            
+            // 大里區
+            {name: "大里杙公園", lat: 24.0998, lng: 120.6789, suitability: 8, facilities: ["shelter", "bench", "water", "toilet", "lighting"], description: "大里主要公園，設施良好。", income_level: "中收入區", safety_score: 8},
+            {name: "草湖公園", lat: 24.0923, lng: 120.6834, suitability: 6, facilities: ["bench", "water"], description: "社區型公園。", income_level: "中收入區", safety_score: 6},
+            {name: "塗城公園", lat: 24.1034, lng: 120.6712, suitability: 7, facilities: ["shelter", "bench", "lighting"], description: "住宅區公園，環境整潔。", income_level: "中收入區", safety_score: 7},
+            {name: "健民公園", lat: 24.0989, lng: 120.6756, suitability: 5, facilities: ["bench"], description: "小型公園，設施簡單。", income_level: "中收入區", safety_score: 5},
+            
+            // 烏日區
+            {name: "烏日啤酒觀光工廠", lat: 24.1089, lng: 120.6234, suitability: 6, facilities: ["shelter", "bench"], description: "觀光工廠綠地，白天較熱鬧。", income_level: "中收入區", safety_score: 6},
+            {name: "烏日公園", lat: 24.1056, lng: 120.6178, suitability: 7, facilities: ["bench", "water", "toilet"], description: "區域公園，基本設施齊全。", income_level: "中收入區", safety_score: 7},
+            {name: "溪尾公園", lat: 24.1123, lng: 120.6145, suitability: 5, facilities: ["bench"], description: "小型社區公園。", income_level: "中收入區", safety_score: 5},
+            
+            // 霧峰區
+            {name: "霧峰林家花園", lat: 24.0634, lng: 120.6998, suitability: 6, facilities: ["shelter", "bench"], description: "古蹟園區，環境優美但有管制。", income_level: "中收入區", safety_score: 6},
+            {name: "霧峰公園", lat: 24.0678, lng: 120.6923, suitability: 7, facilities: ["bench", "water", "lighting"], description: "區域中心公園。", income_level: "中收入區", safety_score: 7},
+            {name: "光復公園", lat: 24.0712, lng: 120.6878, suitability: 5, facilities: ["bench"], description: "住宅區小公園。", income_level: "中收入區", safety_score: 5},
+            
+            // 豐原區
+            {name: "豐原公園", lat: 24.2523, lng: 120.7234, suitability: 8, facilities: ["shelter", "bench", "water", "toilet", "lighting"], description: "豐原主要公園，設施完善。", income_level: "中收入區", safety_score: 8},
+            {name: "廟東夜市旁公園", lat: 24.2489, lng: 120.7198, suitability: 4, facilities: ["bench"], description: "夜市旁小公園，夜間較吵雜。", income_level: "中收入區", safety_score: 4},
+            {name: "南陽公園", lat: 24.2556, lng: 120.7156, suitability: 7, facilities: ["shelter", "bench", "water"], description: "住宅區公園，環境清幽。", income_level: "中收入區", safety_score: 7},
+            {name: "豐東公園", lat: 24.2534, lng: 120.7289, suitability: 6, facilities: ["bench", "lighting"], description: "社區型公園。", income_level: "中收入區", safety_score: 6},
+            
+            // 潭子區
+            {name: "潭子運動公園", lat: 24.2123, lng: 120.7034, suitability: 9, facilities: ["shelter", "bench", "water", "toilet", "lighting"], description: "大型運動公園，設施完善且安全。", income_level: "中收入區", safety_score: 9},
+            {name: "潭子公園", lat: 24.2089, lng: 120.6998, suitability: 7, facilities: ["bench", "water", "lighting"], description: "區域中心公園。", income_level: "中收入區", safety_score: 7},
+            {name: "頭家公園", lat: 24.2156, lng: 120.6923, suitability: 6, facilities: ["bench", "lighting"], description: "住宅區公園。", income_level: "中收入區", safety_score: 6}
+        ];
+
+        // 台中捷運站資料
+        const mrtData = [
+            // 綠線 (烏日文心北屯線)
+            {name: "北屯總站", lat: 24.1612, lng: 120.6834, line: "綠線"},
+            {name: "舊社站", lat: 24.1589, lng: 120.6823, line: "綠線"},
+            {name: "松竹站", lat: 24.1534, lng: 120.6812, line: "綠線"},
+            {name: "四維國小站", lat: 24.1498, lng: 120.6801, line: "綠線"},
+            {name: "崇德文心站", lat: 24.1467, lng: 120.6789, line: "綠線"},
+            {name: "中清文心站", lat: 24.1423, lng: 120.6778, line: "綠線"},
+            {name: "文華高中站", lat: 24.1389, lng: 120.6767, line: "綠線"},
+            {name: "櫻花文心站", lat: 24.1356, lng: 120.6756, line: "綠線"},
+            {name: "市政府站", lat: 24.1623, lng: 120.6445, line: "綠線"},
+            {name: "水安宮站", lat: 24.1598, lng: 120.6434, line: "綠線"},
+            {name: "文心森林公園站", lat: 24.1389, lng: 120.6456, line: "綠線"},
+            {name: "南屯站", lat: 24.1312, lng: 120.6423, line: "綠線"},
+            {name: "豐樂公園站", lat: 24.1278, lng: 120.6534, line: "綠線"},
+            {name: "大慶站", lat: 24.1134, lng: 120.6389, line: "綠線"},
+            {name: "九張犁站", lat: 24.1089, lng: 120.6378, line: "綠線"},
+            {name: "烏日站", lat: 24.1056, lng: 120.6367, line: "綠線"},
+            
+            // 藍線 (機場捷運延伸規劃)
+            {name: "台中車站", lat: 24.1369, lng: 120.6863, line: "藍線(規劃)"},
+            {name: "五權站", lat: 24.1423, lng: 120.6734, line: "藍線(規劃)"},
+            {name: "中友百貨站", lat: 24.1534, lng: 120.6823, line: "藍線(規劃)"},
+            
+            // 捷運快線BRT
+            {name: "台中火車站", lat: 24.1369, lng: 120.6863, line: "BRT"},
+            {name: "仁友東站", lat: 24.1398, lng: 120.6812, line: "BRT"},
+            {name: "彰化銀行站", lat: 24.1445, lng: 120.6789, line: "BRT"},
+            {name: "中區公所站", lat: 24.1467, lng: 120.6767, line: "BRT"},
+            {name: "第一廣場站", lat: 24.1489, lng: 120.6745, line: "BRT"},
+            {name: "科博館站", lat: 24.1523, lng: 120.6723, line: "BRT"},
+            {name: "頂何厝站", lat: 24.1556, lng: 120.6701, line: "BRT"},
+            {name: "忠明國小站", lat: 24.1578, lng: 120.6678, line: "BRT"},
+            {name: "中山醫大站", lat: 24.1612, lng: 120.6656, line: "BRT"},
+            {name: "河南路站", lat: 24.1634, lng: 120.6634, line: "BRT"},
+            {name: "朝馬站", lat: 24.1667, lng: 120.6612, line: "BRT"}
+        ];
+
+        // 台中便利商店資料
+        const convenienceData = [
+            // 中區
+            {name: "7-ELEVEN 台中車站店", lat: 24.1369, lng: 120.6863, type: "7-11"},
+            {name: "全家 中華店", lat: 24.1445, lng: 120.6823, type: "family"},
+            {name: "萊爾富 中區店", lat: 24.1423, lng: 120.6801, type: "hilife"},
+            
+            // 東區
+            {name: "7-ELEVEN 樂成店", lat: 24.1378, lng: 120.6923, type: "7-11"},
+            {name: "全家 東門店", lat: 24.1412, lng: 120.6945, type: "family"},
+            {name: "OK便利商店 復興店", lat: 24.1389, lng: 120.6967, type: "ok"},
+            {name: "7-ELEVEN 進德店", lat: 24.1356, lng: 120.6989, type: "7-11"},
+            
+            // 西區
+            {name: "7-ELEVEN 草悟道店", lat: 24.1519, lng: 120.6644, type: "7-11"},
+            {name: "全家 美術館店", lat: 24.1534, lng: 120.6623, type: "family"},
+            {name: "萊爾富 忠明店", lat: 24.1487, lng: 120.6578, type: "hilife"},
+            {name: "7-ELEVEN 向上店", lat: 24.1423, lng: 120.6545, type: "7-11"},
+            {name: "OK便利商店 英才店", lat: 24.1456, lng: 120.6612, type: "ok"},
+            
+            // 南區
+            {name: "7-ELEVEN 興大店", lat: 24.1245, lng: 120.6823, type: "7-11"},
+            {name: "全家 文心店", lat: 24.1389, lng: 120.6456, type: "family"},
+            {name: "7-ELEVEN 豐樂店", lat: 24.1278, lng: 120.6534, type: "7-11"},
+            {name: "萊爾富 南屯店", lat: 24.1234, lng: 120.6456, type: "hilife"},
+            
+            // 北區
+            {name: "7-ELEVEN 一中店", lat: 24.1578, lng: 120.6756, type: "7-11"},
+            {name: "全家 健行店", lat: 24.1623, lng: 120.6789, type: "family"},
+            {name: "OK便利商店 中清店", lat: 24.1645, lng: 120.6712, type: "ok"},
+            {name: "7-ELEVEN 新民店", lat: 24.1612, lng: 120.6823, type: "7-11"}
+        ];
+
+        // 自定義圖標
+        const createIcon = (color, icon) => {
+            return L.divIcon({
+                html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><i class="fas ${icon}" style="color: white; font-size: 10px;"></i></div>`,
+                className: 'custom-marker',
+                iconSize: [20, 20]
             });
-        }
-
-        // 便利商店資料
-        const storeData = {
-            sevenEleven: [
-                { pos: [24.9668, 121.3015], name: '7-ELEVEN 桃園站前店' },
-                { pos: [24.9758, 121.2945], name: '7-ELEVEN 中正店' },
-                { pos: [24.9588, 121.3125], name: '7-ELEVEN 文化店' },
-                { pos: [24.9518, 121.3285], name: '7-ELEVEN 永安店' }
-            ],
-            familyMart: [
-                { pos: [24.9708, 121.3055], name: '全家桃園中山店' },
-                { pos: [24.9628, 121.2975], name: '全家桃園站前店' },
-                { pos: [24.9548, 121.3165], name: '全家桃園文化店' }
-            ],
-            hiLife: [
-                { pos: [24.9648, 121.3095], name: '萊爾富桃園中正店' },
-                { pos: [24.9778, 121.2895], name: '萊爾富桃園北門店' },
-                { pos: [24.9568, 121.3205], name: '萊爾富桃園文昌店' }
-            ],
-            okMart: [
-                { pos: [24.9688, 121.2935], name: 'OK便利商店桃園店' },
-                { pos: [24.9598, 121.3145], name: 'OK便利商店文化店' }
-            ]
         };
 
-        // 創建自定義標記
-        function createCustomMarker(store, type) {
-            const configs = {
-                sevenEleven: { color: '#00a651', bgColor: 'rgba(0, 166, 81, 0.9)', icon: '7' },
-                familyMart: { color: '#0066cc', bgColor: 'rgba(0, 102, 204, 0.9)', icon: '全' },
-                hiLife: { color: '#e60012', bgColor: 'rgba(230, 0, 18, 0.9)', icon: '萊' },
-                okMart: { color: '#333333', bgColor: 'rgba(51, 51, 51, 0.9)', icon: 'OK' }
-            };
+        // 搜尋功能實現
+        let searchResults = [];
+        let currentSelectedIndex = -1;
 
-            const config = configs[type];
-            const showLabel = map.getZoom() >= 15;
+        function performSearch(query) {
+            if (!query || query.length < 1) {
+                document.getElementById('searchSuggestions').style.display = 'none';
+                return;
+            }
+
+            searchResults = parkData.filter(park => 
+                park.name.toLowerCase().includes(query.toLowerCase())
+            );
+
+            const suggestionsEl = document.getElementById('searchSuggestions');
             
-            const iconHtml = `
-                <div class="custom-marker ${type.replace(/([A-Z])/g, '-$1').toLowerCase()}-marker">
-                    <div class="marker-icon" style="background: ${config.bgColor};">${config.icon}</div>
-                    ${showLabel ? `<span>${store.name}</span>` : ''}
+            if (searchResults.length === 0) {
+                suggestionsEl.style.display = 'none';
+                return;
+            }
+
+            const suggestionsHtml = searchResults.slice(0, 5).map((park, index) => `
+                <div class="search-suggestion" data-index="${index}">
+                    <strong>${park.name}</strong><br>
+                    <small>適宜度: ${park.suitability}/10 | ${park.description}</small>
                 </div>
-            `;
+            `).join('');
 
-            return L.divIcon({
-                html: iconHtml,
-                className: 'custom-div-icon',
-                iconSize: showLabel ? [null, 24] : [20, 20],
-                iconAnchor: showLabel ? [10, 24] : [10, 10]
+            suggestionsEl.innerHTML = suggestionsHtml;
+            suggestionsEl.style.display = 'block';
+
+            // 為建議項目添加點擊事件
+            suggestionsEl.querySelectorAll('.search-suggestion').forEach((item, index) => {
+                item.addEventListener('click', () => {
+                    selectPark(searchResults[index]);
+                });
             });
         }
 
-        // 添加便利商店標記
-        function addStoreMarkers() {
-            // 清除現有標記
-            sevenElevenLayer.clearLayers();
-            familyMartLayer.clearLayers();
-            hiLifeLayer.clearLayers();
-            okMartLayer.clearLayers();
-
-            const currentZoom = map.getZoom();
+        function selectPark(park) {
+            map.setView([park.lat, park.lng], 16);
+            document.getElementById('searchBox').value = park.name;
+            document.getElementById('searchSuggestions').style.display = 'none';
             
-            if (currentZoom >= 14) {
-                // 7-ELEVEN
-                storeData.sevenEleven.forEach(store => {
-                    const marker = L.marker(store.pos, {
-                        icon: createCustomMarker(store, 'sevenEleven')
-                    }).bindPopup(`
-                        <b>${store.name}</b><br>
-                        營業時間: 24小時<br>
-                        服務: ATM、影印、代收
-                    `);
-                    sevenElevenLayer.addLayer(marker);
-                });
-
-                // 全家便利商店
-                storeData.familyMart.forEach(store => {
-                    const marker = L.marker(store.pos, {
-                        icon: createCustomMarker(store, 'familyMart')
-                    }).bindPopup(`
-                        <b>${store.name}</b><br>
-                        營業時間: 24小時<br>
-                        服務: ATM、咖啡、宅配
-                    `);
-                    familyMartLayer.addLayer(marker);
-                });
-
-                // 萊爾富
-                storeData.hiLife.forEach(store => {
-                    const marker = L.marker(store.pos, {
-                        icon: createCustomMarker(store, 'hiLife')
-                    }).bindPopup(`
-                        <b>${store.name}</b><br>
-                        營業時間: 06:00-24:00<br>
-                        服務: ATM、咖啡、代收
-                    `);
-                    hiLifeLayer.addLayer(marker);
-                });
-
-                // OK便利商店
-                storeData.okMart.forEach(store => {
-                    const marker = L.marker(store.pos, {
-                        icon: createCustomMarker(store, 'okMart')
-                    }).bindPopup(`
-                        <b>${store.name}</b><br>
-                        營業時間: 06:00-24:00<br>
-                        服務: ATM、影印、代收
-                    `);
-                    okMartLayer.addLayer(marker);
-                });
-            }
-        }
-
-        // 更新縮放顯示
-        function updateZoomDisplay() {
-            const zoom = map.getZoom();
-            document.getElementById('zoom-display').textContent = zoom;
-            
-            let visibilityInfo = '';
-            const scale = Math.pow(2, 20 - zoom) * 1000;
-            
-            if (zoom >= 15) {
-                visibilityInfo = '顯示: 商業設施 + 標籤<br>';
-            } else if (zoom >= 14) {
-                visibilityInfo = '顯示: 商業設施圖示<br>';
-            } else if (zoom >= 13) {
-                visibilityInfo = '顯示: 行政區劃 + 里界<br>';
-            } else if (zoom >= 6) {
-                visibilityInfo = '顯示: 縣市界<br>';
-            } else {
-                visibilityInfo = '顯示: 基礎地圖<br>';
-            }
-            
-            visibilityInfo += `比例尺: 1:${scale.toLocaleString()}`;
-            document.getElementById('visibility-info').innerHTML = visibilityInfo;
-        }
-
-        // 更新滑鼠座標
-        function updateCoordinates(e) {
-            const coords = `經度: ${e.latlng.lng.toFixed(4)}, 緯度: ${e.latlng.lat.toFixed(4)}`;
-            document.getElementById('coordinates').textContent = coords;
-        }
-
-        // 圖層控制
-        function toggleSection(element) {
-            element.classList.toggle('collapsed');
-            const items = element.nextElementSibling;
-            items.classList.toggle('collapsed');
-        }
-
-        // 圖層顯示控制
-        function setupLayerControls() {
-            // 縣市界
-            document.getElementById('county-boundary').addEventListener('change', function() {
-                if (this.checked) {
-                    map.addLayer(countyBoundaryLayer);
-                } else {
-                    map.removeLayer(countyBoundaryLayer);
+            // 找到對應的marker並打開popup
+            parkLayers.eachLayer(layer => {
+                if (layer.getLatLng().lat === park.lat && layer.getLatLng().lng === park.lng) {
+                    layer.openPopup();
                 }
             });
+        }
 
-            // 里界
-            document.getElementById('village-boundary').addEventListener('change', function() {
-                if (this.checked) {
-                    map.addLayer(villageBoundaryLayer);
+        // 搜尋框事件監聽
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            performSearch(e.target.value);
+        });
+
+        // 鍵盤導航
+        document.getElementById('searchBox').addEventListener('keydown', function(e) {
+            const suggestions = document.querySelectorAll('.search-suggestion');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentSelectedIndex = Math.min(currentSelectedIndex + 1, suggestions.length - 1);
+                updateSelectedSuggestion(suggestions);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentSelectedIndex = Math.max(currentSelectedIndex - 1, -1);
+                updateSelectedSuggestion(suggestions);
+            } else if (e.key === 'Enter' && currentSelectedIndex >= 0) {
+                e.preventDefault();
+                selectPark(searchResults[currentSelectedIndex]);
+            } else if (e.key === 'Escape') {
+                document.getElementById('searchSuggestions').style.display = 'none';
+                currentSelectedIndex = -1;
+            }
+        });
+
+        function updateSelectedSuggestion(suggestions) {
+            suggestions.forEach((item, index) => {
+                if (index === currentSelectedIndex) {
+                    item.style.backgroundColor = '#e3f2fd';
                 } else {
-                    map.removeLayer(villageBoundaryLayer);
+                    item.style.backgroundColor = '';
                 }
             });
+        }
 
-            // 便利商店圖層控制
-            const storeLayers = {
-                'seven-eleven': sevenElevenLayer,
-                'family-mart': familyMartLayer,
-                'hi-life': hiLifeLayer,
-                'ok-mart': okMartLayer
-            };
+        // 點擊其他地方隱藏建議
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('searchSuggestions').style.display = 'none';
+                currentSelectedIndex = -1;
+            }
+        });
 
-            Object.keys(storeLayers).forEach(id => {
-                document.getElementById(id).addEventListener('change', function() {
-                    if (this.checked) {
-                        map.addLayer(storeLayers[id]);
-                    } else {
-                        map.removeLayer(storeLayers[id]);
+        // 渲染公園
+        function renderParks() {
+            parkLayers.clearLayers();
+            
+            parkData.forEach(park => {
+                let color = '#F44336'; // 低適宜度 - 紅色
+                let show = false;
+                
+                if (park.suitability >= 8) {
+                    color = '#4CAF50'; // 高適宜度 - 綠色
+                    show = document.getElementById('highSuitability').checked;
+                } else if (park.suitability >= 5) {
+                    color = '#FF9800'; // 中適宜度 - 橙色
+                    show = document.getElementById('mediumSuitability').checked;
+                } else {
+                    show = document.getElementById('lowSuitability').checked;
+                }
+                
+                if (!show) return;
+                
+                // 檢查設施篩選
+                const facilityFilters = ['shelter', 'bench', 'water', 'toilet', 'lighting'];
+                let facilityMatch = true;
+                
+                facilityFilters.forEach(facility => {
+                    if (document.getElementById(facility).checked && !park.facilities.includes(facility)) {
+                        facilityMatch = false;
                     }
                 });
-            });
-
-            // 底圖切換
-            document.getElementById('osm-map').addEventListener('change', function() {
-                if (this.checked) {
-                    map.removeLayer(satelliteLayer);
-                    map.addLayer(osmLayer);
-                }
-            });
-
-            document.getElementById('satellite-map').addEventListener('change', function() {
-                if (this.checked) {
-                    map.removeLayer(osmLayer);
-                    map.addLayer(satelliteLayer);
-                }
+                
+                if (!facilityMatch) return;
+                
+                // 檢查交通便利性
+                if (!filterParksByTransport(park)) return;
+                
+                const marker = L.marker([park.lat, park.lng], {
+                    icon: createIcon(color, 'fa-tree')
+                });
+                
+                // 創建彈出視窗內容
+                const facilitiesHtml = park.facilities.map(f => {
+                    const icons = {
+                        shelter: '🏠', bench: '🪑', water: '💧', 
+                        toilet: '🚻', lighting: '💡'
+                    };
+                    const names = {
+                        shelter: '遮蔽設施', bench: '座椅', water: '飲水台',
+                        toilet: '廁所', lighting: '照明'
+                    };
+                    return `${icons[f]} ${names[f]}`;
+                }).join('<br>');
+                
+                // 計算最近的捷運站和公車站
+                let nearestMRT = null;
+                let nearestBus = null;
+                let minMRTDistance = Infinity;
+                let minBusDistance = Infinity;
+                
+                mrtData.forEach(station => {
+                    const distance = getDistance(park.lat, park.lng, station.lat, station.lng);
+                    if (distance < minMRTDistance) {
+                        minMRTDistance = distance;
+                        nearestMRT = station;
+                    }
+                });
+                
+                busData.forEach(busStop => {
+                    const distance = getDistance(park.lat, park.lng, busStop.lat, busStop.lng);
+                    if (distance < minBusDistance) {
+                        minBusDistance = distance;
+                        nearestBus = busStop;
+                    }
+                });
+                
+                const popupContent = `
+                    <div class="popup-content">
+                        <h4>${park.name}</h4>
+                        <div class="rating">
+                            適宜度: ${'⭐'.repeat(Math.floor(park.suitability / 2))} (${park.suitability}/10)
+                        </div>
+                        <p><strong>描述:</strong> ${park.description}</p>
+                        <p><strong>設施:</strong><br>${facilitiesHtml}</p>
+                        <p><strong>周邊收入:</strong> ${park.income_level}</p>
+                        ${nearestMRT ? `<p><strong>最近捷運:</strong> ${nearestMRT.name} (${Math.round(minMRTDistance)}m)</p>` : ''}
+                        ${nearestBus ? `<p><strong>最近公車:</strong> ${nearestBus.name} (${Math.round(minBusDistance)}m)</p>` : ''}
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                parkLayers.addLayer(marker);
             });
         }
 
-        // 搜尋功能
-        function setupSearch() {
-            const searchInput = document.getElementById('search-input');
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    const query = this.value.toLowerCase();
-                    // 簡單的店家搜尋
-                    let found = false;
+        // 渲染收入區域
+        function renderIncomeAreas() {
+            incomeLayers.clearLayers();
+            incomeClusterGroup.clearLayers();
+            
+            if (!document.getElementById('showIncomeLayer').checked) return;
+            
+            const maxIncome = document.getElementById('incomeRange').value;
+            const onlySelected = document.getElementById('onlySelectedIncome').checked;
+            const showCluster = document.getElementById('showIncomeCluster').checked;
+            
+            incomeAreas.forEach(area => {
+                if (onlySelected && area.income > maxIncome) return;
+                
+                let color = '#F44336'; // 低收入 - 紅色
+                let opacity = 0.4;
+                
+                if (area.income >= 60) {
+                    color = '#4CAF50'; // 高收入 - 綠色
+                } else if (area.income >= 45) {
+                    color = '#FF9800'; // 中高收入 - 橙色
+                } else if (area.income >= 35) {
+                    color = '#2196F3'; // 中等收入 - 藍色
+                } else {
+                    color = '#9C27B0'; // 中低收入 - 紫色
+                }
+                
+                // 如果超過設定收入，降低透明度
+                if (area.income > maxIncome) {
+                    opacity = 0.1;
+                }
+                
+                const polygon = L.polygon(area.bounds, {
+                    color: color,
+                    weight: 2,
+                    opacity: 0.8,
+                    fillColor: color,
+                    fillOpacity: opacity
+                });
+                
+                polygon.bindPopup(`
+                    <div class="popup-content">
+                        <h4>${area.name}</h4>
+                        <p><strong>平均月收入:</strong> ${area.income}萬元</p>
+                        <p><strong>收入等級:</strong> ${area.level}</p>
+                    </div>
+                `);
+                
+                incomeLayers.addLayer(polygon);
+                
+                // 如果啟用叢集，創建收入區域中心點
+                if (showCluster) {
+                    const centerLat = (area.bounds[0][0] + area.bounds[1][0]) / 2;
+                    const centerLng = (area.bounds[0][1] + area.bounds[1][1]) / 2;
                     
-                    Object.values(storeData).flat().forEach(store => {
-                        if (store.name.toLowerCase().includes(query)) {
-                            map.setView(store.pos, 18);
-                            found = true;
-                        }
+                    const marker = L.marker([centerLat, centerLng], {
+                        icon: createIcon(color, 'fa-dollar-sign'),
+                        income: area.income
                     });
                     
-                    if (!found) {
-                        alert('找不到相關店家，請嘗試其他關鍵字');
-                    }
+                    marker.bindPopup(`
+                        <div class="popup-content">
+                            <h4>${area.name}</h4>
+                            <p><strong>平均月收入:</strong> ${area.income}萬元</p>
+                            <p><strong>收入等級:</strong> ${area.level}</p>
+                            <p><strong>區域範圍:</strong> 約${Math.round(getDistance(area.bounds[0][0], area.bounds[0][1], area.bounds[1][0], area.bounds[1][1])/1000*100)/100}平方公里</p>
+                        </div>
+                    `);
+                    
+                    incomeClusterGroup.addLayer(marker);
                 }
             });
         }
 
-        // 初始化
-        function init() {
-            // 載入初始圖層
-            document.getElementById('loading').style.display = 'block';
+        // 渲染捷運站
+        function renderMRT() {
+            if (!document.getElementById('showMRT').checked) return;
             
-            setTimeout(() => {
-                addCountyBoundaries();
-                addVillageBoundaries();
-                addStoreMarkers();
+            mrtData.forEach(station => {
+                const marker = L.marker([station.lat, station.lng], {
+                    icon: createIcon('#2196F3', 'fa-subway')
+                });
                 
-                document.getElementById('loading').style.display = 'none';
-                updateZoomDisplay();
-            }, 1000);
-
-            // 設置事件監聽
-            map.on('zoomend', () => {
-                updateZoomDisplay();
-                addStoreMarkers(); // 重新繪製標記以更新標籤顯示
+                marker.bindPopup(`
+                    <div class="popup-content">
+                        <h4>${station.name}</h4>
+                        <p><strong>路線:</strong> ${station.line}</p>
+                        <p>🚇 捷運站</p>
+                    </div>
+                `);
+                
+                transportLayers.addLayer(marker);
             });
-            
-            map.on('mousemove', updateCoordinates);
-            
-            setupLayerControls();
-            setupSearch();
         }
 
-        // 啟動應用
-        init();
+        // 渲染公車站
+        function renderBusStops() {
+            if (!document.getElementById('showBus').checked) return;
+            
+            busData.forEach(busStop => {
+                const marker = L.marker([busStop.lat, busStop.lng], {
+                    icon: createIcon('#FF5722', 'fa-bus')
+                });
+                
+                const routesHtml = busStop.routes.slice(0, 10).join(', ') + 
+                    (busStop.routes.length > 10 ? '...' : '');
+                
+                marker.bindPopup(`
+                    <div class="popup-content">
+                        <h4>${busStop.name}</h4>
+                        <p><strong>路線:</strong> ${routesHtml}</p>
+                        <p>🚌 公車站 (${busStop.routes.length}條路線)</p>
+                    </div>
+                `);
+                
+                transportLayers.addLayer(marker);
+            });
+        }
+
+        // 渲染便利商店
+        function renderConvenience() {
+            if (!document.getElementById('convenience').checked) return;
+            
+            convenienceData.forEach(store => {
+                const color = store.type === '7-11' ? '#00A651' : '#0066CC';
+                const marker = L.marker([store.lat, store.lng], {
+                    icon: createIcon(color, 'fa-store')
+                });
+                
+                marker.bindPopup(`
+                    <div class="popup-content">
+                        <h4>${store.name}</h4>
+                        <p>🏪 ${store.type === '7-11' ? '7-ELEVEN' : '全家便利商店'}</p>
+                        <p>24小時營業</p>
+                    </div>
+                `);
+                
+                facilityLayers.addLayer(marker);
+            });
+        }
+
+        // 篩選符合交通條件的公園
+        function filterParksByTransport(park) {
+            const mrtRange = document.getElementById('mrtDistance').value;
+            const busRange = document.getElementById('busDistance').value;
+            
+            let nearMRT = false;
+            let nearBus = false;
+            
+            // 檢查捷運站距離
+            if (document.getElementById('showMRT').checked) {
+                mrtData.forEach(station => {
+                    const distance = getDistance(park.lat, park.lng, station.lat, station.lng);
+                    if (distance <= mrtRange) nearMRT = true;
+                });
+            } else {
+                nearMRT = true; // 如果不顯示捷運站，則不限制
+            }
+            
+            // 檢查公車站距離  
+            if (document.getElementById('showBus').checked) {
+                busData.forEach(busStop => {
+                    const distance = getDistance(park.lat, park.lng, busStop.lat, busStop.lng);
+                    if (distance <= busRange) nearBus = true;
+                });
+            } else {
+                nearBus = true; // 如果不顯示公車站，則不限制
+            }
+            
+            return nearMRT || nearBus;
+        }
+
+        // 計算兩點距離 (公尺)
+        function getDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371e3; // 地球半徑 (公尺)
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lng2-lng1) * Math.PI/180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c;
+        }
+
+        // 更新地圖
+        function updateMap() {
+            // 清除所有圖層
+            transportLayers.clearLayers();
+            facilityLayers.clearLayers();
+            
+            // 重新渲染
+            renderParks();
+            renderMRT();
+            renderBusStops();
+            renderConvenience();
+            renderIncomeAreas();
+        }
+
+        // 重置篩選
+        function resetFilters() {
+            document.getElementById('highSuitability').checked = true;
+            document.getElementById('mediumSuitability').checked = true;
+            document.getElementById('lowSuitability').checked = false;
+            
+            ['shelter', 'bench', 'water', 'toilet', 'lighting'].forEach(id => {
+                document.getElementById(id).checked = false;
+            });
+            
+            document.getElementById('showMRT').checked = true;
+            document.getElementById('showBus').checked = true;
+            document.getElementById('showBike').checked = false;
+            document.getElementById('showIncomeLayer').checked = true;
+            document.getElementById('showIncomeCluster').checked = true;
+            document.getElementById('onlySelectedIncome').checked = false;
+            document.getElementById('convenience').checked = true;
+            document.getElementById('pharmacy').checked = false;
+            document.getElementById('restaurant').checked = false;
+            
+            document.getElementById('mrtDistance').value = 1000;
+            document.getElementById('busDistance').value = 500;
+            document.getElementById('incomeRange').value = 60;
+            
+            document.getElementById('mrtValue').textContent = '1000公尺內';
+            document.getElementById('busValue').textContent = '500公尺內';
+            document.getElementById('incomeValue').textContent = '60萬以下區域';
+            
+            updateMap();
+        }
+
+        // 距離滑桿更新
+        document.getElementById('mrtDistance').addEventListener('input', function(e) {
+            document.getElementById('mrtValue').textContent = e.target.value + '公尺內';
+            updateMap();
+        });
+
+        document.getElementById('busDistance').addEventListener('input', function(e) {
+            document.getElementById('busValue').textContent = e.target.value + '公尺內';
+            updateMap();
+        });
+
+        document.getElementById('incomeRange').addEventListener('input', function(e) {
+            document.getElementById('incomeValue').textContent = e.target.value + '萬以下區域';
+            updateMap();
+        });
+
+        // 篩選條件變化時更新地圖
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updateMap);
+        });
+
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', updateMap);
+        });
+
+        // 初始化地圖
+        updateMap();
+
     </script>
 </body>
 </html>
